@@ -8,7 +8,16 @@
     public abstract class Test<T> where T : class
     {
         private readonly Dictionary<string, object> _services = new();
+        private readonly string DefaultKey = nameof(ParameterInfo);
         private T _sut;
+
+        protected Test(params object[] services)
+        {
+            foreach (var service in services)
+            {
+                StoreService(service, DefaultKey);
+            }
+        }
 
         protected abstract object BuildService(Type type, string key);
 
@@ -49,7 +58,10 @@
 
         protected object ResolveService(ParameterInfo parameter)
         {
-            return ResolveService(parameter.ParameterType, nameof(ParameterInfo));
+            // The reason we join the parameter name with the default key is so that we can support building multiple service instances of the same type for different parameter declarations
+            var key = DefaultKey + "|" + parameter.Name;
+
+            return ResolveService(parameter.ParameterType, key);
         }
 
         protected object ResolveService(Type type, string key)
@@ -63,15 +75,13 @@
 
             var service = BuildService(type, key);
 
-            _services[fullKey] = service;
-
-            return service;
+            return StoreService(service, fullKey);
         }
 
         protected TService Service<TService>()
         {
             // By default the service to return is the one created for a constructor parameter
-            return Service<TService>(nameof(ParameterInfo));
+            return Service<TService>(DefaultKey);
         }
 
         protected TService Service<TService>(string key)
@@ -79,8 +89,41 @@
             return (TService) ResolveService(typeof(TService), key);
         }
 
+        protected object Use(object service)
+        {
+            return Use(service, DefaultKey);
+        }
+
+        protected object Use(object service, string key)
+        {
+            service = service ?? throw new ArgumentNullException(nameof(service));
+
+            return StoreService(service, key);
+        }
+
+        private object StoreService(object service, string key)
+        {
+            var serviceType = service.GetType();
+            var fullKey = key + "|" + serviceType.AssemblyQualifiedName;
+
+            _services[fullKey] = service;
+
+            if (_sut != null)
+            {
+                // Reset the SUT
+                if (_sut is IDisposable disposable)
+                {
+                    disposable.Dispose();
+                }
+
+                _sut = null;
+            }
+
+            return service;
+        }
+
         // ReSharper disable once InconsistentNaming
-        public T SUT
+        protected T SUT
         {
             get
             {
