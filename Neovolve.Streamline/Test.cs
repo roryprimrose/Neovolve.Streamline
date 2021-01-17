@@ -31,7 +31,6 @@
 
         public TService Service<TService>()
         {
-            // By default the service to return is the one created for a constructor parameter
             return Service<TService>(null);
         }
 
@@ -40,18 +39,18 @@
             return (TService) ResolveService(typeof(TService), key);
         }
 
-        public object Use(object service)
+        public object Use<TService>(TService service)
         {
             return Use(service, null);
         }
 
-        public object Use(object service, string key)
+        public object Use<TService>(TService service, string key)
         {
             service = service ?? throw new ArgumentNullException(nameof(service));
 
-            return StoreService(service, service.GetType(), key);
+            return StoreService(service, typeof(TService), key);
         }
-
+        
         protected abstract object BuildService(Type type, string key);
 
         protected virtual T BuildSUT()
@@ -59,6 +58,14 @@
             var constructor = GetConstructor();
 
             var parameters = constructor.GetParameters();
+
+            if (parameters.Length == 0)
+            {
+                var noParameters = Array.Empty<object>();
+
+                return (T)constructor.Invoke(noParameters);
+            }
+
             var parameterValues = parameters.Select(ResolveService).ToArray();
 
             return (T) constructor.Invoke(parameterValues);
@@ -105,7 +112,7 @@
             throw new InvalidOperationException(internalMessage);
         }
 
-        protected object ResolveService(ParameterInfo parameter)
+        protected virtual object ResolveService(ParameterInfo parameter)
         {
             return ResolveService(parameter.ParameterType, null);
         }
@@ -172,11 +179,12 @@
         private object StoreService(object service, Type serviceType, string key = null)
         {
             // The reason we can't use service.GetType() is because that would be the type of the implementation
-            // which will often be different than the service type requested (interface vs class for example)
+            // which will often be different than the service type requested (class vs interface for example)
             var cacheKey = GetCacheKey(serviceType, key);
 
             _services[cacheKey] = service;
 
+            // Services have changed. Tear down the SUT so that it can be build with the new services
             DisposeSUT();
 
             return service;
@@ -186,12 +194,12 @@
         {
             get
             {
-                // Return the built SUT instance
                 if (_sut != null)
                 {
                     return _sut;
                 }
 
+                // The SUT instance does not exist so we need to create it
                 _sut = BuildSUT();
 
                 return _sut;
