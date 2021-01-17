@@ -1,9 +1,8 @@
-﻿namespace Neovolve.Streamline.NSubstitute
+﻿namespace NSubstitute
 {
     using System;
-    using global::NSubstitute;
 
-    public abstract class Test<T> : Streamline.Test<T> where T : class
+    public abstract class Test<T> : Neovolve.Streamline.Test<T> where T : class
     {
         protected override object BuildService(Type type, string key)
         {

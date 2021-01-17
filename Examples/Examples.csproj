@@ -15,7 +15,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Examples.Source\Examples.Source.csproj" />
+    <ProjectReference Include="..\Examples.External\Examples.External.csproj" />
     <ProjectReference Include="..\Neovolve.Streamline.NSubstitute\Neovolve.Streamline.NSubstitute.csproj" />
   </ItemGroup>
 

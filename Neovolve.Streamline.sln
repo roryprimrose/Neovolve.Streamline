@@ -7,9 +7,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Neovolve.Streamline", "Neov
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Examples", "Examples", "{594DC07B-829B-45BE-BD55-402E9FD4FB11}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Examples.Source", "Examples.Source\Examples.Source.csproj", "{FE4CB722-1527-4489-8E30-CCE875F9CD89}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Examples.External", "Examples.External\Examples.External.csproj", "{FE4CB722-1527-4489-8E30-CCE875F9CD89}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Examples.Source.UnitTests", "Examples.Source.UnitTests\Examples.Source.UnitTests.csproj", "{C70A612D-10BE-45E1-BCF3-EDE259AC80C5}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Examples", "Examples\Examples.csproj", "{C70A612D-10BE-45E1-BCF3-EDE259AC80C5}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Neovolve.Streamline.NSubstitute", "Neovolve.Streamline.NSubstitute\Neovolve.Streamline.NSubstitute.csproj", "{D00DB18A-15D7-4484-91F5-8BD92EFA9854}"
 EndProject
