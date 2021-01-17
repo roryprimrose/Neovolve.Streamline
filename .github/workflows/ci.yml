@@ -121,17 +121,34 @@ jobs:
       with:
         name: packages
       
-    - shell: bash
-      name: Find packages
-      run: ls
-
     - name: Setup nuget
       uses: nuget/setup-nuget@v1
+      
+      # Temporary steps while waiting for nuget client to support multiple package push
+    - name: Download version
+      uses: actions/download-artifact@v2
+      with:
+        name: version
 
+    - name: Read version
+      shell: bash
+      run: |
+        value=`cat version.txt`
+        echo NuGetVersionV2=$(echo $value) >> $GITHUB_ENV 
+        
     - name: Publish to MyGet.org
       env: 
         MYGET_APIKEY: ${{ secrets.MYGET_APIKEY }}
-      run: nuget push *.*.symbols.nupkg $MYGET_APIKEY -source https://www.myget.org/F/neovolve/api/v2/package
+      run: |
+        nuget push Neovolve.Streamline.${{ env.NuGetVersionV2 }}.symbols.nupkg $MYGET_APIKEY -source https://www.myget.org/F/neovolve/api/v2/package
+        nuget push Neovolve.Streamline.NSubstitute.${{ env.NuGetVersionV2 }}.symbols.nupkg $MYGET_APIKEY -source https://www.myget.org/F/neovolve/api/v2/package
+      
+        # End temporary steps
+
+#    - name: Publish to MyGet.org
+#      env: 
+#        MYGET_APIKEY: ${{ secrets.MYGET_APIKEY }}
+#      run: nuget push *.*.symbols.nupkg $MYGET_APIKEY -source https://www.myget.org/F/neovolve/api/v2/package
       
   release:
     needs: build
