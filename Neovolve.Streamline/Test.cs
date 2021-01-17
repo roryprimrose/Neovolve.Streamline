@@ -8,9 +8,9 @@
     public abstract class Test<T> : IDisposable where T : class
     {
         private readonly Dictionary<string, object> _services = new();
-        private T _sut;
+        private T? _sut;
 
-        protected Test(params object[] services)
+        protected Test(params object[]? services)
         {
             if (services == null)
             {
@@ -31,7 +31,7 @@
 
         public TService Service<TService>()
         {
-            return Service<TService>(null);
+            return Service<TService>(string.Empty);
         }
 
         public TService Service<TService>(string key)
@@ -41,7 +41,7 @@
 
         public object Use<TService>(TService service)
         {
-            return Use(service, null);
+            return Use(service, string.Empty);
         }
 
         public object Use<TService>(TService service, string key)
@@ -114,7 +114,7 @@
 
         protected virtual object ResolveService(ParameterInfo parameter)
         {
-            return ResolveService(parameter.ParameterType, null);
+            return ResolveService(parameter.ParameterType, string.Empty);
         }
 
         protected object ResolveService(Type type, string key)
@@ -135,7 +135,7 @@
         {
             if (string.IsNullOrWhiteSpace(key))
             {
-                return type.AssemblyQualifiedName;
+                return type.AssemblyQualifiedName!;
             }
 
             return type.AssemblyQualifiedName + "|" + key;
@@ -176,7 +176,7 @@
             _sut = null;
         }
 
-        private object StoreService(object service, Type serviceType, string key = null)
+        private object StoreService(object service, Type serviceType, string key = "")
         {
             // The reason we can't use service.GetType() is because that would be the type of the implementation
             // which will often be different than the service type requested (class vs interface for example)
