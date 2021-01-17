@@ -3,5 +3,5 @@ Provides NuGet packages to make testing easy for classes with dependencies. The 
 
 ## Examples
 
-[SUT with single dependency](Examples/Examples/SingleParameter.cs)  
-[SUT declared as internal](Examples/Examples/InternalScopedTypes.cs)
+[SUT with single dependency](Examples/SingleParameter.cs)  
+[SUT declared as internal](Examples/InternalScopedTypes.cs)
