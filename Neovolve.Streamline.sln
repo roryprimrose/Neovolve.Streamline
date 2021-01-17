@@ -7,11 +7,29 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Neovolve.Streamline", "Neov
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Examples", "Examples", "{594DC07B-829B-45BE-BD55-402E9FD4FB11}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Examples.External", "Examples.External\Examples.External.csproj", "{FE4CB722-1527-4489-8E30-CCE875F9CD89}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Examples.External", "Examples.External\Examples.External.csproj", "{FE4CB722-1527-4489-8E30-CCE875F9CD89}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Examples", "Examples\Examples.csproj", "{C70A612D-10BE-45E1-BCF3-EDE259AC80C5}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Examples", "Examples\Examples.csproj", "{C70A612D-10BE-45E1-BCF3-EDE259AC80C5}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Neovolve.Streamline.NSubstitute", "Neovolve.Streamline.NSubstitute\Neovolve.Streamline.NSubstitute.csproj", "{D00DB18A-15D7-4484-91F5-8BD92EFA9854}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Neovolve.Streamline.NSubstitute", "Neovolve.Streamline.NSubstitute\Neovolve.Streamline.NSubstitute.csproj", "{D00DB18A-15D7-4484-91F5-8BD92EFA9854}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{3CC70DA2-2BA4-46D5-9667-D47A4C87ACC0}"
+	ProjectSection(SolutionItems) = preProject
+		.gitignore = .gitignore
+		GitVersion.yml = GitVersion.yml
+		LICENSE.md = LICENSE.md
+		README.md = README.md
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".github", ".github", "{C45335C3-C6D2-4784-A5FC-9B8D7B89D78E}"
+	ProjectSection(SolutionItems) = preProject
+		.github\dependabot.yml = .github\dependabot.yml
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "workflows", "workflows", "{BB236080-06EF-482C-BDC4-092897E3FA8D}"
+	ProjectSection(SolutionItems) = preProject
+		.github\workflows\ci.yml = .github\workflows\ci.yml
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -78,6 +96,7 @@ Global
 	GlobalSection(NestedProjects) = preSolution
 		{FE4CB722-1527-4489-8E30-CCE875F9CD89} = {594DC07B-829B-45BE-BD55-402E9FD4FB11}
 		{C70A612D-10BE-45E1-BCF3-EDE259AC80C5} = {594DC07B-829B-45BE-BD55-402E9FD4FB11}
+		{BB236080-06EF-482C-BDC4-092897E3FA8D} = {C45335C3-C6D2-4784-A5FC-9B8D7B89D78E}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {21234D86-D0D2-46FE-AC99-8B917E986B54}
