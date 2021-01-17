@@ -4,6 +4,17 @@
     <TargetFrameworks>netstandard2.0;netstandard2.1;net5.0</TargetFrameworks>
     <LangVersion>latest</LangVersion>
     <Nullable>enable</Nullable>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+
+    <Authors>rprimrose</Authors>
+    <Company>Neovolve</Company>
+    <Description>Provides streamlined SUT creation</Description>
+    <PackageProjectUrl>https://github.com/roryprimrose/Neovolve.Streamline</PackageProjectUrl>
+    <PackageTags>Testing</PackageTags>
+    <Copyright>Copyright © Neovolve 2016</Copyright>
+    <IncludeSymbols>True</IncludeSymbols>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <RepositoryUrl>https://github.com/roryprimrose/Neovolve.Streamline</RepositoryUrl>
   </PropertyGroup>
 
 </Project>
