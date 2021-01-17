@@ -70,7 +70,12 @@
 
             var parameterValues = parameters.Select(ResolveService).ToArray();
 
-            return (T) constructor.Invoke(parameterValues);
+            return BuildSUT(constructor, parameterValues);            
+        }
+
+        protected virtual T BuildSUT(ConstructorInfo constructor, object[] parameterValues)
+        {
+            return (T)constructor.Invoke(parameterValues);
         }
 
         protected virtual void Dispose(bool disposing)
