@@ -5,17 +5,28 @@
     using System.Linq;
     using System.Reflection;
 
-    public abstract class Test<T> where T : class
+    public abstract class Test<T> : IDisposable where T : class
     {
         private readonly Dictionary<string, object> _services = new();
         private T _sut;
 
         protected Test(params object[] services)
         {
+            if (services == null)
+            {
+                return;
+            }
+
             foreach (var service in services)
             {
-                StoreService(service, service.GetType(), null);
+                StoreService(service, service.GetType());
             }
+        }
+
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
         }
 
         public TService Service<TService>()
@@ -43,7 +54,6 @@
 
         protected abstract object BuildService(Type type, string key);
 
-        // ReSharper disable once InconsistentNaming
         protected virtual T BuildSUT()
         {
             var constructor = GetConstructor();
@@ -52,6 +62,17 @@
             var parameterValues = parameters.Select(ResolveService).ToArray();
 
             return (T) constructor.Invoke(parameterValues);
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                DisposeSUT();
+
+                // Dispose all the services and clear them out
+                DisposeServices();
+            }
         }
 
         protected virtual ConstructorInfo GetConstructor()
@@ -107,7 +128,42 @@
             return type.AssemblyQualifiedName + "|" + key;
         }
 
-        private object StoreService(object service, Type serviceType, string key)
+        private void DisposeServices()
+        {
+            var services = _services.Values.OfType<IDisposable>();
+
+            foreach (var service in services)
+            {
+                try
+                {
+                    service.Dispose();
+                }
+                catch
+                {
+                    // The service failed to dispose but we don't want to crash the test runner for this kind of failure
+                }
+            }
+
+            _services.Clear();
+        }
+
+        private void DisposeSUT()
+        {
+            if (_sut == null)
+            {
+                return;
+            }
+
+            // Reset the SUT
+            if (_sut is IDisposable disposable)
+            {
+                disposable.Dispose();
+            }
+
+            _sut = null;
+        }
+
+        private object StoreService(object service, Type serviceType, string key = null)
         {
             // The reason we can't use service.GetType() is because that would be the type of the implementation
             // which will often be different than the service type requested (interface vs class for example)
@@ -115,21 +171,11 @@
 
             _services[cacheKey] = service;
 
-            if (_sut != null)
-            {
-                // Reset the SUT
-                if (_sut is IDisposable disposable)
-                {
-                    disposable.Dispose();
-                }
-
-                _sut = null;
-            }
+            DisposeSUT();
 
             return service;
         }
 
-        // ReSharper disable once InconsistentNaming
         public T SUT
         {
             get
