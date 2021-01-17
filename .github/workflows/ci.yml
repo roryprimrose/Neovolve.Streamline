@@ -121,6 +121,10 @@ jobs:
       with:
         name: packages
       
+    - shell: bash
+      name: Find packages
+      run: ls
+
     - name: Setup nuget
       uses: nuget/setup-nuget@v1
 
