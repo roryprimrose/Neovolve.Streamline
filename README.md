@@ -3,8 +3,10 @@ Provides NuGet packages to make testing easy for classes with dependencies. The 
 
 ## Examples
 
+[SUT with multiple parameters](Examples/MultipleParameters.cs)  
 [SUT with single parameter](Examples/SingleParameter.cs)  
 [SUT with no constructor parameters](Examples/NoConstructorParameters.cs)  
 [SUT with custom services](Examples/CustomServices.cs)  
 [SUT using keyed services](Examples/KeyedServices.cs)  
-[SUT declared as internal](Examples/InternalScopedTypes.cs)
+[SUT declared as internal](Examples/InternalScopedTypes.cs)  
+[Using test class constructor parameters](Examples/TestClassConstructorParameters.cs)  

@@ -180,15 +180,32 @@ jobs:
     - name: Setup nuget
       uses: nuget/setup-nuget@v1
       
+      # Temporary steps while waiting for nuget client to support multiple package push
     - name: Publish to GitHub
       env: 
         GPR_APIKEY: ${{ secrets.GPR_APIKEY }}
-      run: nuget push *.*.symbols.nupkg $GPR_APIKEY -source https://nuget.pkg.github.com/roryprimrose/index.json
+      run: |
+        nuget push Neovolve.Streamline.${{ env.NuGetVersionV2 }}.symbols.nupkg $GPR_APIKEY -source https://nuget.pkg.github.com/roryprimrose/index.json
+        nuget push Neovolve.Streamline.NSubstitute.${{ env.NuGetVersionV2 }}.symbols.nupkg $GPR_APIKEY -source https://nuget.pkg.github.com/roryprimrose/index.json
       
     - name: Publish to NuGet.org
       env: 
         NUGET_APIKEY: ${{ secrets.NUGET_APIKEY }}
-      run: nuget push *.*.symbols.nupkg $NUGET_APIKEY -source https://api.nuget.org/v3/index.json
+      run: |
+        nuget push Neovolve.Streamline.${{ env.NuGetVersionV2 }}.symbols.nupkg $NUGET_APIKEY -source https://api.nuget.org/v3/index.json
+        nuget push Neovolve.Streamline.NSubstitute.${{ env.NuGetVersionV2 }}.symbols.nupkg $NUGET_APIKEY -source https://api.nuget.org/v3/index.json
+      
+        # End temporary steps
+
+#    - name: Publish to GitHub
+#      env: 
+#        GPR_APIKEY: ${{ secrets.GPR_APIKEY }}
+#      run: nuget push *.*.symbols.nupkg $GPR_APIKEY -source https://nuget.pkg.github.com/roryprimrose/index.json
+#      
+#    - name: Publish to NuGet.org
+#      env: 
+#        NUGET_APIKEY: ${{ secrets.NUGET_APIKEY }}
+#      run: nuget push *.*.symbols.nupkg $NUGET_APIKEY -source https://api.nuget.org/v3/index.json
 
     - name: Create release
       id: create_release

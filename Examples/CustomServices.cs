@@ -33,7 +33,7 @@
             var id = Guid.NewGuid();
             var wrapper = new Wrapper();
 
-            Use<ICustomService>(wrapper);
+            Use(wrapper);
 
             var actual = SUT.GetValue(id);
 

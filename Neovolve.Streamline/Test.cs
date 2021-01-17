@@ -19,7 +19,7 @@
 
             foreach (var service in services)
             {
-                StoreService(service, service.GetType());
+                StoreServiceAsAllTypes(service);
             }
         }
 
@@ -39,18 +39,20 @@
             return (TService) ResolveService(typeof(TService), key);
         }
 
-        public object Use<TService>(TService service)
+        public TService Use<TService>(TService service)
         {
             return Use(service, string.Empty);
         }
 
-        public object Use<TService>(TService service, string key)
+        public TService Use<TService>(TService service, string key)
         {
             service = service ?? throw new ArgumentNullException(nameof(service));
 
-            return StoreService(service, typeof(TService), key);
+            StoreServiceAsAllTypes(service, key);
+
+            return service;
         }
-        
+
         protected abstract object BuildService(Type type, string key);
 
         protected virtual T BuildSUT()
@@ -63,7 +65,7 @@
             {
                 var noParameters = Array.Empty<object>();
 
-                return (T)constructor.Invoke(noParameters);
+                return (T) constructor.Invoke(noParameters);
             }
 
             var parameterValues = parameters.Select(ResolveService).ToArray();
@@ -94,7 +96,8 @@
 
             if (publicConstructors.Length > 1)
             {
-                var publicMessage = $"Unable to create an instance of {typeof(T).FullName} because there are {publicConstructors.Length} public constructors where only a single constructor is supported by default. To control the constructor to use, override the GetConstructor() method to return the specific constructor that should be used.";
+                var publicMessage =
+                    $"Unable to create an instance of {typeof(T).FullName} because there are {publicConstructors.Length} public constructors where only a single constructor is supported by default. To control the constructor to use, override the GetConstructor() method to return the specific constructor that should be used.";
 
                 throw new InvalidOperationException(publicMessage);
             }
@@ -107,7 +110,8 @@
                 return internalConstructors[0];
             }
 
-            var internalMessage = $"Unable to create an instance of {typeof(T).FullName} because there are {internalConstructors.Length} internal constructors where only a single constructor is supported by default. To control the constructor to use, override the GetConstructor() method to return the specific constructor that should be used.";
+            var internalMessage =
+                $"Unable to create an instance of {typeof(T).FullName} because there are {internalConstructors.Length} internal constructors where only a single constructor is supported by default. To control the constructor to use, override the GetConstructor() method to return the specific constructor that should be used.";
 
             throw new InvalidOperationException(internalMessage);
         }
@@ -117,7 +121,7 @@
             return ResolveService(parameter.ParameterType, string.Empty);
         }
 
-        protected object ResolveService(Type type, string key)
+        protected virtual object ResolveService(Type type, string key)
         {
             var cacheKey = GetCacheKey(type, key);
 
@@ -128,7 +132,33 @@
 
             var service = BuildService(type, key);
 
-            return StoreService(service, type, key);
+            StoreService(service, type, key);
+
+            return service;
+        }
+
+        private static IEnumerable<Type> GetAllRelatedTypes(Type sourceType)
+        {
+            yield return sourceType;
+
+            // Find all the implemented interfaces and return them
+            var interfaceTypes = sourceType.GetInterfaces();
+
+            foreach (var interfaceType in interfaceTypes)
+            {
+                yield return interfaceType;
+            }
+
+            // Find all the base types
+            var baseType = sourceType.BaseType;
+
+            while (baseType != null
+                   && baseType != typeof(object))
+            {
+                yield return baseType;
+
+                baseType = baseType.BaseType;
+            }
         }
 
         private static string GetCacheKey(Type type, string key)
@@ -176,7 +206,7 @@
             _sut = null;
         }
 
-        private object StoreService(object service, Type serviceType, string key = "")
+        private void StoreService(object service, Type serviceType, string key = "")
         {
             // The reason we can't use service.GetType() is because that would be the type of the implementation
             // which will often be different than the service type requested (class vs interface for example)
@@ -186,8 +216,16 @@
 
             // Services have changed. Tear down the SUT so that it can be build with the new services
             DisposeSUT();
+        }
 
-            return service;
+        private void StoreServiceAsAllTypes(object service, string key = "")
+        {
+            var serviceTypes = GetAllRelatedTypes(service.GetType());
+
+            foreach (var serviceType in serviceTypes)
+            {
+                StoreService(service, serviceType, key);
+            }
         }
 
         public T SUT
