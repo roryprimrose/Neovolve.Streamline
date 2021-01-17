@@ -3,5 +3,6 @@ Provides NuGet packages to make testing easy for classes with dependencies. The 
 
 ## Examples
 
-[SUT with single dependency](Examples/SingleParameter.cs)  
+[SUT with single parameter](Examples/SingleParameter.cs)  
+[SUT with no constructor parameters](Examples/NoConstructorParameters.cs)  
 [SUT declared as internal](Examples/InternalScopedTypes.cs)

@@ -85,6 +85,13 @@
                 return publicConstructors[0];
             }
 
+            if (publicConstructors.Length > 1)
+            {
+                var publicMessage = $"Unable to create an instance of {typeof(T).FullName} because there are {publicConstructors.Length} public constructors where only a single constructor is supported by default. To control the constructor to use, override the GetConstructor() method to return the specific constructor that should be used.";
+
+                throw new InvalidOperationException(publicMessage);
+            }
+
             var internalConstructors =
                 typeof(T).GetConstructors(BindingFlags.Instance | BindingFlags.NonPublic);
 
@@ -93,10 +100,9 @@
                 return internalConstructors[0];
             }
 
-            var message =
-                $"Unable to create an instance of {typeof(T).FullName} because there are {publicConstructors.Length} public constructors and {internalConstructors.Length} non-public constructors but only one on either is supported.";
+            var internalMessage = $"Unable to create an instance of {typeof(T).FullName} because there are {internalConstructors.Length} internal constructors where only a single constructor is supported by default. To control the constructor to use, override the GetConstructor() method to return the specific constructor that should be used.";
 
-            throw new InvalidOperationException(message);
+            throw new InvalidOperationException(internalMessage);
         }
 
         protected object ResolveService(ParameterInfo parameter)
