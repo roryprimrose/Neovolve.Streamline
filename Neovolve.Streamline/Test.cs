@@ -8,15 +8,37 @@
     public abstract class Test<T> where T : class
     {
         private readonly Dictionary<string, object> _services = new();
-        private readonly string DefaultKey = nameof(ParameterInfo);
         private T _sut;
 
         protected Test(params object[] services)
         {
             foreach (var service in services)
             {
-                StoreService(service, DefaultKey);
+                StoreService(service, service.GetType(), null);
             }
+        }
+
+        public TService Service<TService>()
+        {
+            // By default the service to return is the one created for a constructor parameter
+            return Service<TService>(null);
+        }
+
+        public TService Service<TService>(string key)
+        {
+            return (TService) ResolveService(typeof(TService), key);
+        }
+
+        public object Use(object service)
+        {
+            return Use(service, null);
+        }
+
+        public object Use(object service, string key)
+        {
+            service = service ?? throw new ArgumentNullException(nameof(service));
+
+            return StoreService(service, service.GetType(), key);
         }
 
         protected abstract object BuildService(Type type, string key);
@@ -58,55 +80,40 @@
 
         protected object ResolveService(ParameterInfo parameter)
         {
-            // The reason we join the parameter name with the default key is so that we can support building multiple service instances of the same type for different parameter declarations
-            var key = DefaultKey + "|" + parameter.Name;
-
-            return ResolveService(parameter.ParameterType, key);
+            return ResolveService(parameter.ParameterType, null);
         }
 
         protected object ResolveService(Type type, string key)
         {
-            var fullKey = key + "|" + type.AssemblyQualifiedName;
+            var cacheKey = GetCacheKey(type, key);
 
-            if (_services.ContainsKey(fullKey))
+            if (_services.ContainsKey(cacheKey))
             {
-                return _services[fullKey];
+                return _services[cacheKey];
             }
 
             var service = BuildService(type, key);
 
-            return StoreService(service, fullKey);
+            return StoreService(service, type, key);
         }
 
-        protected TService Service<TService>()
+        private static string GetCacheKey(Type type, string key)
         {
-            // By default the service to return is the one created for a constructor parameter
-            return Service<TService>(DefaultKey);
+            if (string.IsNullOrWhiteSpace(key))
+            {
+                return type.AssemblyQualifiedName;
+            }
+
+            return type.AssemblyQualifiedName + "|" + key;
         }
 
-        protected TService Service<TService>(string key)
+        private object StoreService(object service, Type serviceType, string key)
         {
-            return (TService) ResolveService(typeof(TService), key);
-        }
+            // The reason we can't use service.GetType() is because that would be the type of the implementation
+            // which will often be different than the service type requested (interface vs class for example)
+            var cacheKey = GetCacheKey(serviceType, key);
 
-        protected object Use(object service)
-        {
-            return Use(service, DefaultKey);
-        }
-
-        protected object Use(object service, string key)
-        {
-            service = service ?? throw new ArgumentNullException(nameof(service));
-
-            return StoreService(service, key);
-        }
-
-        private object StoreService(object service, string key)
-        {
-            var serviceType = service.GetType();
-            var fullKey = key + "|" + serviceType.AssemblyQualifiedName;
-
-            _services[fullKey] = service;
+            _services[cacheKey] = service;
 
             if (_sut != null)
             {
@@ -123,7 +130,7 @@
         }
 
         // ReSharper disable once InconsistentNaming
-        protected T SUT
+        public T SUT
         {
             get
             {
