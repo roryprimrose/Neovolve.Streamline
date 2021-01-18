@@ -17,7 +17,6 @@
     // As per #2 above, declare this once in your test project
     internal class TestProxy<T> : Test<T> where T : class
     {
-
     }
 
     public class InternalScopedTypes

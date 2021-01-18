@@ -1,6 +1,6 @@
 ﻿using System.Runtime.CompilerServices;
 
-[assembly:InternalsVisibleTo("Examples")]
+[assembly: InternalsVisibleTo("Examples")]
 [assembly: InternalsVisibleTo("DynamicProxyGenAssembly2")]
 
 namespace Examples.External

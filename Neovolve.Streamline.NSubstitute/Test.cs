@@ -19,7 +19,7 @@
 
         protected override T BuildSUT(ConstructorInfo constructor, object[] parameterValues)
         {
-            return Substitute.ForPartsOf<T>(parameterValues);            
+            return Substitute.ForPartsOf<T>(parameterValues);
         }
     }
 }
