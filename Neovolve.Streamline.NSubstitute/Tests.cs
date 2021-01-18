@@ -5,7 +5,7 @@
 
     public abstract class Tests<T> : Neovolve.Streamline.Tests<T> where T : class
     {
-        protected Tests(params object[]? services) : base(services)
+        protected Tests(params object[] services) : base(services)
         {
         }
 

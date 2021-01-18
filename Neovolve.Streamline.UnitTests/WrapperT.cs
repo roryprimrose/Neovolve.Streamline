@@ -3,7 +3,7 @@
     using System;
     using NSubstitute;
 
-    public class Wrapper : Tests<Target>
+    public class Wrapper<T> : Tests<T> where T : class
     {
         public Wrapper(params object[] values) : base(values)
         {

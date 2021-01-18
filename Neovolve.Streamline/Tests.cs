@@ -10,13 +10,8 @@
         private readonly Dictionary<string, object> _services = new();
         private T? _sut;
 
-        protected Tests(params object[]? services)
+        protected Tests(params object[] services)
         {
-            if (services == null)
-            {
-                return;
-            }
-
             foreach (var service in services)
             {
                 StoreServiceAsAllTypes(service);
@@ -36,6 +31,8 @@
 
         public TService Service<TService>(string key)
         {
+            key = key ?? throw new ArgumentNullException(nameof(key));
+
             return (TService) ResolveService(typeof(TService), key);
         }
 
@@ -47,7 +44,8 @@
         public TService Use<TService>(TService service, string key)
         {
             service = service ?? throw new ArgumentNullException(nameof(service));
-
+            key = key ?? throw new ArgumentNullException(nameof(key));
+            
             StoreServiceAsAllTypes(service, key);
 
             return service;
