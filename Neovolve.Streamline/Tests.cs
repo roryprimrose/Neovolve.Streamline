@@ -5,18 +5,13 @@
     using System.Linq;
     using System.Reflection;
 
-    public abstract class Test<T> : IDisposable where T : class
+    public abstract class Tests<T> : IDisposable where T : class
     {
         private readonly Dictionary<string, object> _services = new();
         private T? _sut;
 
-        protected Test(params object[]? services)
+        protected Tests(params object[] services)
         {
-            if (services == null)
-            {
-                return;
-            }
-
             foreach (var service in services)
             {
                 StoreServiceAsAllTypes(service);
@@ -36,6 +31,8 @@
 
         public TService Service<TService>(string key)
         {
+            key = key ?? throw new ArgumentNullException(nameof(key));
+
             return (TService) ResolveService(typeof(TService), key);
         }
 
@@ -47,7 +44,8 @@
         public TService Use<TService>(TService service, string key)
         {
             service = service ?? throw new ArgumentNullException(nameof(service));
-
+            key = key ?? throw new ArgumentNullException(nameof(key));
+            
             StoreServiceAsAllTypes(service, key);
 
             return service;
@@ -70,12 +68,12 @@
 
             var parameterValues = parameters.Select(ResolveService).ToArray();
 
-            return BuildSUT(constructor, parameterValues);            
+            return BuildSUT(constructor, parameterValues);
         }
 
         protected virtual T BuildSUT(ConstructorInfo constructor, object[] parameterValues)
         {
-            return (T)constructor.Invoke(parameterValues);
+            return (T) constructor.Invoke(parameterValues);
         }
 
         protected virtual void Dispose(bool disposing)

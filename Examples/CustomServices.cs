@@ -25,7 +25,7 @@
         }
     }
 
-    public class CustomServicesTests : Test<CustomServices>
+    public class CustomServicesTests : Tests<CustomServices>
     {
         [Fact]
         public void CanUseCustomService()

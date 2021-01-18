@@ -3,9 +3,9 @@
     using System;
     using System.Reflection;
 
-    public abstract class Test<T> : Neovolve.Streamline.Test<T> where T : class
+    public abstract class Tests<T> : Neovolve.Streamline.Tests<T> where T : class
     {
-        protected Test(params object[]? services) : base(services)
+        protected Tests(params object[] services) : base(services)
         {
         }
 
@@ -19,7 +19,7 @@
 
         protected override T BuildSUT(ConstructorInfo constructor, object[] parameterValues)
         {
-            return Substitute.ForPartsOf<T>(parameterValues);            
+            return Substitute.ForPartsOf<T>(parameterValues);
         }
     }
 }

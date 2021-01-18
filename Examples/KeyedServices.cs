@@ -30,7 +30,7 @@
         }
     }
 
-    public class KeyedServicesTests : Test<KeyedServices>
+    public class KeyedServicesTests : Tests<KeyedServices>
     {
         [Fact]
         public void CanConfigureKeyedServices()

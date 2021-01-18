@@ -15,9 +15,8 @@
     //      This idea comes from https://pedro.digitaldias.com/?p=494
 
     // As per #2 above, declare this once in your test project
-    internal class TestProxy<T> : Test<T> where T : class
+    internal class TestProxy<T> : Tests<T> where T : class
     {
-
     }
 
     public class InternalScopedTypes

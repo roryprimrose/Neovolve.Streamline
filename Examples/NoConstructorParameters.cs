@@ -18,7 +18,7 @@
         }
     }
 
-    public class NoConstructorParametersTests : Test<NoConstructorParameters>
+    public class NoConstructorParametersTests : Tests<NoConstructorParameters>
     {
         [Fact]
         public void CanUseServiceOnMethod()
