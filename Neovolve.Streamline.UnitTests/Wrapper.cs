@@ -3,7 +3,7 @@
     using System;
     using NSubstitute;
 
-    public class Wrapper : Test<Target>
+    public class Wrapper : Tests<Target>
     {
         protected override object BuildService(Type type, string key)
         {

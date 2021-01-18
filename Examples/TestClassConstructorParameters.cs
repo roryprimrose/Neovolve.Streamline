@@ -23,7 +23,7 @@
         }
     }
 
-    public class TestClassConstructorParametersTests : Test<TestClassConstructorParameters>
+    public class TestClassConstructorParametersTests : Tests<TestClassConstructorParameters>
     {
         public TestClassConstructorParametersTests(ITestOutputHelper output) : base(output.BuildLogger())
         {

@@ -4,7 +4,7 @@
     using FluentAssertions;
     using Xunit;
 
-    public class TestTests
+    public class TestsTests
     {
         [Fact]
         public void UseThrowsExceptionWithNullService()

@@ -53,7 +53,7 @@
         }
     }
 
-    public class MultipleParametersTest : Test<MultipleParameters>
+    public class MultipleParametersTest : Tests<MultipleParameters>
     {
         [Fact]
         public void CanSupportMultipleServices()

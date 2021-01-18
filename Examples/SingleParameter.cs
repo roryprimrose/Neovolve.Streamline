@@ -25,7 +25,7 @@
         }
     }
 
-    public class SingleParameterTests : Test<SingleParameter>
+    public class SingleParameterTests : Tests<SingleParameter>
     {
         [Fact]
         public void Test1()

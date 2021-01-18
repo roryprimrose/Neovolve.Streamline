@@ -41,7 +41,7 @@
         }
     }
 
-    public class PartialMockTests : Test<PartialMock>
+    public class PartialMockTests : Tests<PartialMock>
     {
         [Fact]
         public void MethodIsNotSubbed_OriginalImplementationGotCalled()

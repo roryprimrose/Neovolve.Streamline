@@ -5,12 +5,12 @@
     using System.Linq;
     using System.Reflection;
 
-    public abstract class Test<T> : IDisposable where T : class
+    public abstract class Tests<T> : IDisposable where T : class
     {
         private readonly Dictionary<string, object> _services = new();
         private T? _sut;
 
-        protected Test(params object[]? services)
+        protected Tests(params object[]? services)
         {
             if (services == null)
             {
