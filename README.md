@@ -116,11 +116,12 @@ This package brings several advantages.
 [SUT with multiple parameters](Examples/MultipleParameters.cs)  
 [SUT with single parameter](Examples/SingleParameter.cs)  
 [SUT with no constructor parameters](Examples/NoConstructorParameters.cs)  
-[SUT as partial mock](Examples/PartialMock.cs)  
 [SUT with custom services](Examples/CustomServices.cs)  
 [SUT using keyed services](Examples/KeyedServices.cs)  
-[SUT declared as internal](Examples/InternalScopedTypes.cs)  
+[SUT declared as internal having public interface](Examples/InternalTypePublicInterface.cs)  
+[SUT declared as internal via proxy](Examples/InternalScopedTypes.cs)  
 [Using test class constructor parameters](Examples/TestClassConstructorParameters.cs)  
+[SUT as partial mock](Examples/PartialMock.cs)  
 
 ## Supporters
 
