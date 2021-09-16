@@ -3,12 +3,12 @@
     using System;
     using System.Reflection;
 
-    public abstract class Tests<T> : Neovolve.Streamline.Tests<T> where T : class
+    public abstract class TestsPartOf<T> : Neovolve.Streamline.Tests<T> where T : class
     {
-        protected Tests(params object[] services) : base(services)
+        protected TestsPartOf(params object[] services) : base(services)
         {
         }
-        
+
         protected override object BuildService(Type type, string key)
         {
             var types = new[] { type };
@@ -19,9 +19,7 @@
 
         protected override T BuildSUT(ConstructorInfo constructor, object[] parameterValues)
         {
-            Type[] types = { TargetType };
-
-            return (T)Substitute.For(types, parameterValues);
+            return Substitute.ForPartsOf<T>(parameterValues);
         }
     }
 }
