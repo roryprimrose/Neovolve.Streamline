@@ -33,7 +33,7 @@
         {
             key = key ?? throw new ArgumentNullException(nameof(key));
 
-            return (TService) ResolveService(typeof(TService), key);
+            return (TService)ResolveService(typeof(TService), key);
         }
 
         public TService Use<TService>(TService service)
@@ -45,7 +45,7 @@
         {
             service = service ?? throw new ArgumentNullException(nameof(service));
             key = key ?? throw new ArgumentNullException(nameof(key));
-            
+
             StoreServiceAsAllTypes(service, key);
 
             return service;
@@ -63,7 +63,7 @@
             {
                 var noParameters = Array.Empty<object>();
 
-                return (T) constructor.Invoke(noParameters);
+                return (T)constructor.Invoke(noParameters);
             }
 
             var parameterValues = parameters.Select(ResolveService).ToArray();
@@ -73,7 +73,7 @@
 
         protected virtual T BuildSUT(ConstructorInfo constructor, object[] parameterValues)
         {
-            return (T) constructor.Invoke(parameterValues);
+            return (T)constructor.Invoke(parameterValues);
         }
 
         protected virtual void Dispose(bool disposing)
@@ -90,7 +90,7 @@
         protected virtual ConstructorInfo GetConstructor()
         {
             var publicConstructors =
-                typeof(T).GetConstructors(BindingFlags.Instance | BindingFlags.Public);
+                TargetType.GetConstructors(BindingFlags.Instance | BindingFlags.Public);
 
             if (publicConstructors.Length == 1)
             {
@@ -100,13 +100,13 @@
             if (publicConstructors.Length > 1)
             {
                 var publicMessage =
-                    $"Unable to create an instance of {typeof(T).FullName} because there are {publicConstructors.Length} public constructors where only a single constructor is supported by default. To control the constructor to use, override the GetConstructor() method to return the specific constructor that should be used.";
+                    $"Unable to create an instance of {TargetType.FullName} because there are {publicConstructors.Length} public constructors where only a single constructor is supported by default. To control the constructor to use, override the GetConstructor() method to return the specific constructor that should be used.";
 
                 throw new InvalidOperationException(publicMessage);
             }
 
             var internalConstructors =
-                typeof(T).GetConstructors(BindingFlags.Instance | BindingFlags.NonPublic);
+                TargetType.GetConstructors(BindingFlags.Instance | BindingFlags.NonPublic);
 
             if (internalConstructors.Length == 1)
             {
@@ -114,7 +114,7 @@
             }
 
             var internalMessage =
-                $"Unable to create an instance of {typeof(T).FullName} because there are {internalConstructors.Length} internal constructors where only a single constructor is supported by default. To control the constructor to use, override the GetConstructor() method to return the specific constructor that should be used.";
+                $"Unable to create an instance of {TargetType.FullName} because there are {internalConstructors.Length} internal constructors where only a single constructor is supported by default. To control the constructor to use, override the GetConstructor() method to return the specific constructor that should be used.";
 
             throw new InvalidOperationException(internalMessage);
         }
@@ -246,5 +246,7 @@
                 return _sut;
             }
         }
+
+        protected virtual Type TargetType => typeof(T);
     }
 }

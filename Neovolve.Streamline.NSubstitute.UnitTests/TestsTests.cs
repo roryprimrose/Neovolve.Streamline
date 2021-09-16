@@ -13,7 +13,7 @@ namespace Neovolve.Streamline.NSubstitute.UnitTests
             var id = Guid.NewGuid();
             var expected = Guid.NewGuid().ToString();
 
-            var wrapper = new Wrapper();
+            var wrapper = new TestsWrapper<TypeWithDependency>();
 
             wrapper.Service<ITargetService>().GetValue(id).Returns(expected);
 
@@ -32,22 +32,7 @@ namespace Neovolve.Streamline.NSubstitute.UnitTests
 
             service.GetValue(id).Returns(expected);
 
-            var wrapper = new Wrapper(service);
-
-            var actual = wrapper.SUT.GetValue(id);
-
-            actual.Should().Be(expected);
-        }
-
-        [Fact]
-        public void CanPartialMockSUT()
-        {
-            var id = Guid.NewGuid();
-            var expected = Guid.NewGuid().ToString();
-
-            var wrapper = new Wrapper();
-
-            wrapper.SUT.GetValueInternal(id).Returns(expected);
+            var wrapper = new TestsWrapper<TypeWithDependency>(service);
 
             var actual = wrapper.SUT.GetValue(id);
 
