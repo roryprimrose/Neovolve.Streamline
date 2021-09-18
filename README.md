@@ -111,7 +111,7 @@ This package brings several advantages.
  - The SUT instance is automatically created with any required service dependencies
  - Adding, removing or re-ordering constructor parameters have limited or no impact on existing unit tests
 
-## Examples
+## Examples using NSubstitute
 
 [SUT with multiple parameters](Examples/MultipleParameters.cs)  
 [SUT with single parameter](Examples/SingleParameter.cs)  
@@ -121,7 +121,8 @@ This package brings several advantages.
 [SUT declared as internal having public interface](Examples/InternalTypePublicInterface.cs)  
 [SUT declared as internal via proxy](Examples/InternalScopedTypes.cs)  
 [Using test class constructor parameters](Examples/TestClassConstructorParameters.cs)  
-[SUT as partial mock](Examples/PartialMock.cs)  
+[SUT as partial mock](Examples/PartialSUTMock.cs)  
+[SUT as full mock](Examples/FullSUTMock.cs)  
 
 ## Supporters
 
