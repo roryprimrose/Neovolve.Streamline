@@ -13,6 +13,11 @@ namespace Neovolve.Streamline.NSubstitute.UnitTests
 
         public string GetValue(Guid id)
         {
+            return GetValueFromService(id);
+        }
+
+        public virtual string GetValueFromService(Guid id)
+        {
             return _service.GetValue(id);
         }
     }

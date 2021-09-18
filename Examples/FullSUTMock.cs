@@ -5,16 +5,16 @@
     using NSubstitute;
     using Xunit;
 
-    public interface IPartialMockService
+    public interface IFullMockService
     {
         string GetValue(Guid id);
     }
 
-    public class PartialMock
+    public class FullSUTMock
     {
-        private readonly IPartialMockService _service;
+        private readonly IFullMockService _service;
 
-        public PartialMock(IPartialMockService service)
+        public FullSUTMock(IFullMockService service)
         {
             _service = service;
         }
@@ -37,14 +37,14 @@
 
         protected internal virtual string GetValueEx(Guid id)
         {
-            return _service.GetValue(id);
+            throw new NotImplementedException();
         }
     }
 
-    public class PartialMockTests : TestsPartOf<PartialMock>
+    public class FullMockTests : TestsSubstituteOf<FullSUTMock>
     {
         [Fact]
-        public void MethodIsNotSubbed_OriginalImplementationGotCalled()
+        public void MethodIsNotSubbed_OriginalImplementationWasNotCalled()
         {
             var id = Guid.NewGuid();
             var wrapper = new Wrapper();
@@ -53,7 +53,7 @@
 
             var actual = SUT.GetValue(id);
 
-            actual.Should().Be(id.ToString());
+            actual.Should().BeNullOrWhiteSpace();
         }
 
         [Fact]
@@ -71,7 +71,7 @@
             actual.Should().Be("42");
         }
 
-        private class Wrapper : IPartialMockService
+        private class Wrapper : IFullMockService
         {
             public string GetValue(Guid id)
             {
