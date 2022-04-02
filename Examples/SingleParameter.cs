@@ -1,43 +1,42 @@
-﻿namespace Examples
+﻿namespace Examples;
+
+using System;
+using FluentAssertions;
+using NSubstitute;
+using Xunit;
+
+public interface IDoSomething
 {
-    using System;
-    using FluentAssertions;
-    using NSubstitute;
-    using Xunit;
+    string DoSomething(Guid id);
+}
 
-    public interface IDoSomething
+public class SingleParameter
+{
+    private readonly IDoSomething _something;
+
+    public SingleParameter(IDoSomething something)
     {
-        string DoSomething(Guid id);
+        _something = something;
     }
 
-    public class SingleParameter
+    public string Run(Guid id)
     {
-        private readonly IDoSomething _something;
-
-        public SingleParameter(IDoSomething something)
-        {
-            _something = something;
-        }
-
-        public string Run(Guid id)
-        {
-            return _something.DoSomething(id);
-        }
+        return _something.DoSomething(id);
     }
+}
 
-    public class SingleParameterTests : Tests<SingleParameter>
+public class SingleParameterTests : Tests<SingleParameter>
+{
+    [Fact]
+    public void Test1()
     {
-        [Fact]
-        public void Test1()
-        {
-            var id = Guid.NewGuid();
-            var expected = Guid.NewGuid().ToString();
+        var id = Guid.NewGuid();
+        var expected = Guid.NewGuid().ToString();
 
-            Service<IDoSomething>().DoSomething(id).Returns(expected);
+        Service<IDoSomething>().DoSomething(id).Returns(expected);
 
-            var actual = SUT.Run(id);
+        var actual = SUT.Run(id);
 
-            actual.Should().Be(expected);
-        }
+        actual.Should().Be(expected);
     }
 }

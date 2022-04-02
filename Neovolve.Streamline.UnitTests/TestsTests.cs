@@ -1,516 +1,515 @@
-﻿namespace Neovolve.Streamline.UnitTests
+﻿namespace Neovolve.Streamline.UnitTests;
+
+using System;
+using System.IO;
+using System.Linq;
+using System.Reflection;
+using Divergic.Logging.Xunit;
+using FluentAssertions;
+using Microsoft.Extensions.Logging;
+using NSubstitute;
+using Xunit;
+using Xunit.Abstractions;
+
+public class TestsTests
 {
-    using System;
-    using System.IO;
-    using System.Linq;
-    using System.Reflection;
-    using Divergic.Logging.Xunit;
-    using FluentAssertions;
-    using Microsoft.Extensions.Logging;
-    using NSubstitute;
-    using Xunit;
-    using Xunit.Abstractions;
+    private readonly ICacheLogger _logger;
 
-    public class TestsTests
+    public TestsTests(ITestOutputHelper output)
     {
-        private readonly ICacheLogger _logger;
+        _logger = output.BuildLogger();
+    }
 
-        public TestsTests(ITestOutputHelper output)
+    [Fact]
+    public void CanCreateMissingServices()
+    {
+        var id = Guid.NewGuid();
+        var expected = Guid.NewGuid().ToString();
+
+        var wrapper = new Wrapper();
+
+        wrapper.Service<ITargetService>().GetValue(id).Returns(expected);
+
+        var actual = wrapper.SUT.GetValue(id);
+
+        actual.Should().Be(expected);
+    }
+
+    [Fact]
+    public void CanCreateSUTFromTypeWithDefaultConstructor()
+    {
+        var wrapper = new Wrapper<DefaultConstructor>();
+
+        wrapper.SUT.Should().NotBeNull();
+    }
+
+    [Fact]
+    public void CanCreateSUTFromTypeWithSingleInternalConstructor()
+    {
+        var wrapper = new Wrapper<SingleInternalConstructor>();
+
+        wrapper.SUT.Should().NotBeNull();
+        wrapper.SUT.Logger.Should().NotBeNull();
+    }
+
+    [Fact]
+    public void CanCreateSUTFromTypeWithSinglePublicConstructor()
+    {
+        var wrapper = new Wrapper<SinglePublicConstructor>();
+
+        wrapper.SUT.Should().NotBeNull();
+        wrapper.SUT.Service.Should().NotBeNull();
+        wrapper.SUT.Logger.Should().BeNull();
+    }
+
+    [Fact]
+    public void CanCreateSUTFromTypeWithSpecifiedConstructor()
+    {
+        var wrapper = new TargetSpecificConstructorWrapper();
+
+        wrapper.SUT.Should().NotBeNull();
+        wrapper.SUT.Service.Should().BeNull();
+        wrapper.SUT.Logger.Should().NotBeNull();
+    }
+
+    [Fact]
+    public void CanCreateWithConstructorProvidedService()
+    {
+        var id = Guid.NewGuid();
+        var expected = Guid.NewGuid().ToString();
+
+        var service = Substitute.For<ITargetService>();
+
+        service.GetValue(id).Returns(expected);
+
+        var wrapper = new Wrapper(service);
+
+        var actual = wrapper.SUT.GetValue(id);
+
+        actual.Should().Be(expected);
+    }
+
+    [Fact]
+    public void CanPartialMockSUT()
+    {
+        var id = Guid.NewGuid();
+        var expected = Guid.NewGuid().ToString();
+
+        var wrapper = new Wrapper();
+
+        wrapper.SUT.GetValueInternal(id).Returns(expected);
+
+        var actual = wrapper.SUT.GetValue(id);
+
+        actual.Should().Be(expected);
+    }
+
+    [Fact]
+    public void CreatingWithServicesRegistersServicesAsMultipleTypes()
+    {
+        var wrapper = new Wrapper(_logger);
+
+        wrapper.Service<ICacheLogger>().Should().BeSameAs(_logger);
+        wrapper.Service<CacheLogger>().Should().BeSameAs(_logger);
+        wrapper.Service<FilterLogger>().Should().BeSameAs(_logger);
+        wrapper.Service<ILogger>().Should().BeSameAs(_logger);
+    }
+
+    [Fact]
+    public void DisposeCleansUpServices()
+    {
+        var id = Guid.NewGuid();
+        var expected = Guid.NewGuid().ToString();
+
+        var wrapper = new Wrapper();
+
+        var service = wrapper.Service<ITargetService>();
+
+        service.GetValue(id).Returns(expected);
+
+        // Make sure the SUT exists
+        wrapper.SUT.Should().NotBeNull();
+
+        wrapper.Dispose();
+
+        service.Received().Dispose();
+
+        var nextService = wrapper.Service<ITargetService>();
+
+        nextService.Should().NotBeSameAs(service);
+    }
+
+    [Fact]
+    public void DisposeCleansUpSUT()
+    {
+        var id = Guid.NewGuid();
+        var expected = Guid.NewGuid().ToString();
+
+        var wrapper = Substitute.ForPartsOf<Wrapper>();
+
+        wrapper.Service<ITargetService>().GetValue(id).Returns(expected);
+
+        // Make sure the SUT exists
+        var sut = wrapper.SUT;
+
+        sut.Should().NotBeNull();
+
+        wrapper.Dispose();
+
+        wrapper.Received().Dispose();
+
+        var nextSut = wrapper.SUT;
+
+        nextSut.Should().NotBeSameAs(sut);
+    }
+
+    [Fact]
+    public void DisposeContinuesToDisposeServicesWhenOneServiceDisposeThrowsException()
+    {
+        var id = Guid.NewGuid();
+        var expected = Guid.NewGuid().ToString();
+
+        using var stream = Substitute.ForPartsOf<MemoryStream>();
+        var wrapper = new Wrapper();
+
+        wrapper.Use(stream);
+
+        var service = wrapper.Service<ITargetService>();
+
+        service.GetValue(id).Returns(expected);
+        service.When(x => x.Dispose()).Do(_ => throw new TimeoutException());
+
+        // Make sure the SUT exists
+        wrapper.SUT.Should().NotBeNull();
+
+        Action action = () => wrapper.Dispose();
+
+        action.Should().NotThrow();
+        service.Received().Dispose();
+        stream.Received().Dispose();
+    }
+
+    [Fact]
+    public void DisposeDoesNotThrowExceptionWhenDisposingServiceThrowsException()
+    {
+        var id = Guid.NewGuid();
+        var expected = Guid.NewGuid().ToString();
+
+        var wrapper = new Wrapper();
+
+        var service = wrapper.Service<ITargetService>();
+
+        service.GetValue(id).Returns(expected);
+        service.When(x => x.Dispose()).Do(_ => throw new TimeoutException());
+
+        // Make sure the SUT exists
+        wrapper.SUT.Should().NotBeNull();
+
+        Action action = () => wrapper.Dispose();
+
+        action.Should().NotThrow();
+    }
+
+    [Fact]
+    public void ServiceByKeyReturnsCachedInstanceForSameKey()
+    {
+        var key = Guid.NewGuid().ToString();
+        var wrapper = new Wrapper();
+
+        var service = wrapper.Service<ITargetService>(key);
+        var nextService = wrapper.Service<ITargetService>(key);
+
+        nextService.Should().BeSameAs(service);
+    }
+
+    [Fact]
+    public void ServiceByKeyReturnsNewInstanceForDifferentKey()
+    {
+        var firstKey = Guid.NewGuid().ToString();
+        var secondKey = Guid.NewGuid().ToString();
+        var wrapper = new Wrapper();
+
+        var service = wrapper.Service<ITargetService>(firstKey);
+        var nextService = wrapper.Service<ITargetService>(secondKey);
+
+        nextService.Should().NotBeSameAs(service);
+    }
+
+    [Fact]
+    public void ServiceReturnsCachedInstance()
+    {
+        var wrapper = new Wrapper();
+
+        var service = wrapper.Service<ITargetService>();
+        var nextService = wrapper.Service<ITargetService>();
+
+        nextService.Should().BeSameAs(service);
+    }
+
+    [Fact]
+    public void ServiceReturnsConstructorProvidedService()
+    {
+        var expected = Substitute.For<ITargetService>();
+
+        var wrapper = new Wrapper(expected);
+
+        var actual = wrapper.Service<ITargetService>();
+
+        actual.Should().BeSameAs(expected);
+    }
+
+    [Fact]
+    public void ServiceThrowsExceptionWithNullKey()
+    {
+        var service = Substitute.For<ITargetService>();
+
+        var wrapper = new Wrapper(service);
+
+        Action action = () => wrapper.Service<ITargetService>(null!);
+
+        action.Should().Throw<ArgumentNullException>();
+    }
+
+    [Fact]
+    public void SUTThrowsExceptionWhenMultipleInternalConstructorsFound()
+    {
+        var wrapper = new Wrapper<MultipleInternalConstructors>();
+
+        Action action = () =>
         {
-            _logger = output.BuildLogger();
-        }
-
-        [Fact]
-        public void CanCreateMissingServices()
-        {
-            var id = Guid.NewGuid();
-            var expected = Guid.NewGuid().ToString();
-
-            var wrapper = new Wrapper();
-
-            wrapper.Service<ITargetService>().GetValue(id).Returns(expected);
-
-            var actual = wrapper.SUT.GetValue(id);
-
-            actual.Should().Be(expected);
-        }
-
-        [Fact]
-        public void CanCreateSUTFromTypeWithDefaultConstructor()
-        {
-            var wrapper = new Wrapper<DefaultConstructor>();
-
-            wrapper.SUT.Should().NotBeNull();
-        }
-
-        [Fact]
-        public void CanCreateSUTFromTypeWithSingleInternalConstructor()
-        {
-            var wrapper = new Wrapper<SingleInternalConstructor>();
-
-            wrapper.SUT.Should().NotBeNull();
-            wrapper.SUT.Logger.Should().NotBeNull();
-        }
-
-        [Fact]
-        public void CanCreateSUTFromTypeWithSinglePublicConstructor()
-        {
-            var wrapper = new Wrapper<SinglePublicConstructor>();
-
-            wrapper.SUT.Should().NotBeNull();
-            wrapper.SUT.Service.Should().NotBeNull();
-            wrapper.SUT.Logger.Should().BeNull();
-        }
-
-        [Fact]
-        public void CanCreateSUTFromTypeWithSpecifiedConstructor()
-        {
-            var wrapper = new TargetSpecificConstructorWrapper();
-
-            wrapper.SUT.Should().NotBeNull();
-            wrapper.SUT.Service.Should().BeNull();
-            wrapper.SUT.Logger.Should().NotBeNull();
-        }
-
-        [Fact]
-        public void CanCreateWithConstructorProvidedService()
-        {
-            var id = Guid.NewGuid();
-            var expected = Guid.NewGuid().ToString();
-
-            var service = Substitute.For<ITargetService>();
-
-            service.GetValue(id).Returns(expected);
-
-            var wrapper = new Wrapper(service);
-
-            var actual = wrapper.SUT.GetValue(id);
-
-            actual.Should().Be(expected);
-        }
-
-        [Fact]
-        public void CanPartialMockSUT()
-        {
-            var id = Guid.NewGuid();
-            var expected = Guid.NewGuid().ToString();
-
-            var wrapper = new Wrapper();
-
-            wrapper.SUT.GetValueInternal(id).Returns(expected);
-
-            var actual = wrapper.SUT.GetValue(id);
-
-            actual.Should().Be(expected);
-        }
-
-        [Fact]
-        public void CreatingWithServicesRegistersServicesAsMultipleTypes()
-        {
-            var wrapper = new Wrapper(_logger);
-
-            wrapper.Service<ICacheLogger>().Should().BeSameAs(_logger);
-            wrapper.Service<CacheLogger>().Should().BeSameAs(_logger);
-            wrapper.Service<FilterLogger>().Should().BeSameAs(_logger);
-            wrapper.Service<ILogger>().Should().BeSameAs(_logger);
-        }
-
-        [Fact]
-        public void DisposeCleansUpServices()
-        {
-            var id = Guid.NewGuid();
-            var expected = Guid.NewGuid().ToString();
-
-            var wrapper = new Wrapper();
-
-            var service = wrapper.Service<ITargetService>();
-
-            service.GetValue(id).Returns(expected);
-
-            // Make sure the SUT exists
-            wrapper.SUT.Should().NotBeNull();
-
-            wrapper.Dispose();
-
-            service.Received().Dispose();
-
-            var nextService = wrapper.Service<ITargetService>();
-
-            nextService.Should().NotBeSameAs(service);
-        }
-
-        [Fact]
-        public void DisposeCleansUpSUT()
-        {
-            var id = Guid.NewGuid();
-            var expected = Guid.NewGuid().ToString();
-
-            var wrapper = Substitute.ForPartsOf<Wrapper>();
-
-            wrapper.Service<ITargetService>().GetValue(id).Returns(expected);
-
-            // Make sure the SUT exists
+            // ReSharper disable once UnusedVariable
             var sut = wrapper.SUT;
+        };
 
-            sut.Should().NotBeNull();
+        var message = action.Should().Throw<InvalidOperationException>().And.Message;
 
-            wrapper.Dispose();
+        _logger.LogInformation(message);
+    }
 
-            wrapper.Received().Dispose();
+    [Fact]
+    public void SUTThrowsExceptionWhenMultiplePublicConstructorsFound()
+    {
+        var wrapper = new Wrapper<MultiplePublicConstructors>();
 
-            var nextSut = wrapper.SUT;
-
-            nextSut.Should().NotBeSameAs(sut);
-        }
-
-        [Fact]
-        public void DisposeContinuesToDisposeServicesWhenOneServiceDisposeThrowsException()
+        Action action = () =>
         {
-            var id = Guid.NewGuid();
-            var expected = Guid.NewGuid().ToString();
+            // ReSharper disable once UnusedVariable
+            var sut = wrapper.SUT;
+        };
 
-            using var stream = Substitute.ForPartsOf<MemoryStream>();
-            var wrapper = new Wrapper();
+        var message = action.Should().Throw<InvalidOperationException>().And.Message;
 
-            wrapper.Use(stream);
+        _logger.LogInformation(message);
+    }
 
-            var service = wrapper.Service<ITargetService>();
+    [Fact]
+    public void UseByKeyStoresCustomService()
+    {
+        var key = Guid.NewGuid().ToString();
+        var expected = Substitute.For<ITargetService>();
 
-            service.GetValue(id).Returns(expected);
-            service.When(x => x.Dispose()).Do(_ => throw new TimeoutException());
+        var wrapper = new Wrapper();
 
-            // Make sure the SUT exists
-            wrapper.SUT.Should().NotBeNull();
+        wrapper.Use(expected, key);
 
-            Action action = () => wrapper.Dispose();
+        var actual = wrapper.Service<ITargetService>(key);
 
-            action.Should().NotThrow();
-            service.Received().Dispose();
-            stream.Received().Dispose();
-        }
+        actual.Should().BeSameAs(expected);
+    }
 
-        [Fact]
-        public void DisposeDoesNotThrowExceptionWhenDisposingServiceThrowsException()
-        {
-            var id = Guid.NewGuid();
-            var expected = Guid.NewGuid().ToString();
+    [Fact]
+    public void UseByKeyStoresUniqueCustomServices()
+    {
+        var firstKey = Guid.NewGuid().ToString();
+        var secondKey = Guid.NewGuid().ToString();
+        var firstService = Substitute.For<ITargetService>();
+        var secondService = Substitute.For<ITargetService>();
 
-            var wrapper = new Wrapper();
+        var wrapper = new Wrapper();
 
-            var service = wrapper.Service<ITargetService>();
+        wrapper.Use(firstService, firstKey);
+        wrapper.Use(secondService, secondKey);
 
-            service.GetValue(id).Returns(expected);
-            service.When(x => x.Dispose()).Do(_ => throw new TimeoutException());
+        var firstActual = wrapper.Service<ITargetService>(firstKey);
+        var secondActual = wrapper.Service<ITargetService>(secondKey);
 
-            // Make sure the SUT exists
-            wrapper.SUT.Should().NotBeNull();
+        firstActual.Should().NotBeSameAs(secondActual);
+        firstActual.Should().BeSameAs(firstService);
+        secondActual.Should().BeSameAs(secondService);
+    }
 
-            Action action = () => wrapper.Dispose();
+    [Fact]
+    public void UseOverwritesExistingService()
+    {
+        var service = Substitute.For<ITargetService>();
+        var expected = Substitute.For<ITargetService>();
 
-            action.Should().NotThrow();
-        }
+        var wrapper = new Wrapper();
 
-        [Fact]
-        public void ServiceByKeyReturnsCachedInstanceForSameKey()
-        {
-            var key = Guid.NewGuid().ToString();
-            var wrapper = new Wrapper();
+        wrapper.Use(service);
+        wrapper.Use(expected);
 
-            var service = wrapper.Service<ITargetService>(key);
-            var nextService = wrapper.Service<ITargetService>(key);
+        var actual = wrapper.Service<ITargetService>();
 
-            nextService.Should().BeSameAs(service);
-        }
+        actual.Should().BeSameAs(expected);
+        actual.Should().NotBeSameAs(service);
+    }
 
-        [Fact]
-        public void ServiceByKeyReturnsNewInstanceForDifferentKey()
-        {
-            var firstKey = Guid.NewGuid().ToString();
-            var secondKey = Guid.NewGuid().ToString();
-            var wrapper = new Wrapper();
+    [Fact]
+    public void UseRegistersServicesAsMultipleTypes()
+    {
+        var wrapper = new Wrapper();
 
-            var service = wrapper.Service<ITargetService>(firstKey);
-            var nextService = wrapper.Service<ITargetService>(secondKey);
+        wrapper.Use(_logger);
 
-            nextService.Should().NotBeSameAs(service);
-        }
+        wrapper.Service<ICacheLogger>().Should().BeSameAs(_logger);
+        wrapper.Service<CacheLogger>().Should().BeSameAs(_logger);
+        wrapper.Service<FilterLogger>().Should().BeSameAs(_logger);
+        wrapper.Service<ILogger>().Should().BeSameAs(_logger);
+    }
 
-        [Fact]
-        public void ServiceReturnsCachedInstance()
-        {
-            var wrapper = new Wrapper();
+    [Fact]
+    public void UseResetsSUTWhenServiceUpdated()
+    {
+        var wrapper = new Wrapper();
 
-            var service = wrapper.Service<ITargetService>();
-            var nextService = wrapper.Service<ITargetService>();
+        var firstService = Substitute.For<ITargetService>();
 
-            nextService.Should().BeSameAs(service);
-        }
+        wrapper.Use(firstService);
 
-        [Fact]
-        public void ServiceReturnsConstructorProvidedService()
-        {
-            var expected = Substitute.For<ITargetService>();
+        var firstSut = wrapper.SUT;
 
-            var wrapper = new Wrapper(expected);
+        var secondService = Substitute.For<ITargetService>();
 
-            var actual = wrapper.Service<ITargetService>();
+        wrapper.Use(secondService);
 
-            actual.Should().BeSameAs(expected);
-        }
+        var secondSut = wrapper.SUT;
 
-        [Fact]
-        public void ServiceThrowsExceptionWithNullKey()
-        {
-            var service = Substitute.For<ITargetService>();
+        firstSut.Should().NotBeSameAs(secondSut);
+    }
 
-            var wrapper = new Wrapper(service);
+    [Fact]
+    public void UseStoresCustomService()
+    {
+        var expected = Substitute.For<ITargetService>();
 
-            Action action = () => wrapper.Service<ITargetService>(null!);
+        var wrapper = new Wrapper();
 
-            action.Should().Throw<ArgumentNullException>();
-        }
+        wrapper.Use(expected);
 
-        [Fact]
-        public void SUTThrowsExceptionWhenMultipleInternalConstructorsFound()
-        {
-            var wrapper = new Wrapper<MultipleInternalConstructors>();
+        var actual = wrapper.Service<ITargetService>();
 
-            Action action = () =>
-            {
-                // ReSharper disable once UnusedVariable
-                var sut = wrapper.SUT;
-            };
+        actual.Should().BeSameAs(expected);
+    }
 
-            var message = action.Should().Throw<InvalidOperationException>().And.Message;
+    [Fact]
+    public void UseThrowsExceptionWithNullKey()
+    {
+        var service = Substitute.For<ITargetService>();
 
-            _logger.LogInformation(message);
-        }
+        var wrapper = new Wrapper(service);
 
-        [Fact]
-        public void SUTThrowsExceptionWhenMultiplePublicConstructorsFound()
-        {
-            var wrapper = new Wrapper<MultiplePublicConstructors>();
+        Action action = () => wrapper.Use<ITargetService>(null!);
 
-            Action action = () =>
-            {
-                // ReSharper disable once UnusedVariable
-                var sut = wrapper.SUT;
-            };
+        action.Should().Throw<ArgumentNullException>();
+    }
 
-            var message = action.Should().Throw<InvalidOperationException>().And.Message;
+    [Fact]
+    public void UseThrowsExceptionWithNullService()
+    {
+        var sut = new Wrapper();
 
-            _logger.LogInformation(message);
-        }
+        Action action = () => sut.Use<object>(null!);
 
-        [Fact]
-        public void UseByKeyStoresCustomService()
-        {
-            var key = Guid.NewGuid().ToString();
-            var expected = Substitute.For<ITargetService>();
+        action.Should().Throw<ArgumentNullException>();
+    }
 
-            var wrapper = new Wrapper();
+    // ReSharper disable once ClassNeverInstantiated.Local
+    private class DefaultConstructor
+    {
+    }
 
-            wrapper.Use(expected, key);
-
-            var actual = wrapper.Service<ITargetService>(key);
-
-            actual.Should().BeSameAs(expected);
-        }
-
-        [Fact]
-        public void UseByKeyStoresUniqueCustomServices()
-        {
-            var firstKey = Guid.NewGuid().ToString();
-            var secondKey = Guid.NewGuid().ToString();
-            var firstService = Substitute.For<ITargetService>();
-            var secondService = Substitute.For<ITargetService>();
-
-            var wrapper = new Wrapper();
-
-            wrapper.Use(firstService, firstKey);
-            wrapper.Use(secondService, secondKey);
-
-            var firstActual = wrapper.Service<ITargetService>(firstKey);
-            var secondActual = wrapper.Service<ITargetService>(secondKey);
-
-            firstActual.Should().NotBeSameAs(secondActual);
-            firstActual.Should().BeSameAs(firstService);
-            secondActual.Should().BeSameAs(secondService);
-        }
-
-        [Fact]
-        public void UseOverwritesExistingService()
-        {
-            var service = Substitute.For<ITargetService>();
-            var expected = Substitute.For<ITargetService>();
-
-            var wrapper = new Wrapper();
-
-            wrapper.Use(service);
-            wrapper.Use(expected);
-
-            var actual = wrapper.Service<ITargetService>();
-
-            actual.Should().BeSameAs(expected);
-            actual.Should().NotBeSameAs(service);
-        }
-
-        [Fact]
-        public void UseRegistersServicesAsMultipleTypes()
-        {
-            var wrapper = new Wrapper();
-
-            wrapper.Use(_logger);
-
-            wrapper.Service<ICacheLogger>().Should().BeSameAs(_logger);
-            wrapper.Service<CacheLogger>().Should().BeSameAs(_logger);
-            wrapper.Service<FilterLogger>().Should().BeSameAs(_logger);
-            wrapper.Service<ILogger>().Should().BeSameAs(_logger);
-        }
-
-        [Fact]
-        public void UseResetsSUTWhenServiceUpdated()
-        {
-            var wrapper = new Wrapper();
-
-            var firstService = Substitute.For<ITargetService>();
-
-            wrapper.Use(firstService);
-
-            var firstSut = wrapper.SUT;
-
-            var secondService = Substitute.For<ITargetService>();
-
-            wrapper.Use(secondService);
-
-            var secondSut = wrapper.SUT;
-
-            firstSut.Should().NotBeSameAs(secondSut);
-        }
-
-        [Fact]
-        public void UseStoresCustomService()
-        {
-            var expected = Substitute.For<ITargetService>();
-
-            var wrapper = new Wrapper();
-
-            wrapper.Use(expected);
-
-            var actual = wrapper.Service<ITargetService>();
-
-            actual.Should().BeSameAs(expected);
-        }
-
-        [Fact]
-        public void UseThrowsExceptionWithNullKey()
-        {
-            var service = Substitute.For<ITargetService>();
-
-            var wrapper = new Wrapper(service);
-
-            Action action = () => wrapper.Use<ITargetService>(null!);
-
-            action.Should().Throw<ArgumentNullException>();
-        }
-
-        [Fact]
-        public void UseThrowsExceptionWithNullService()
-        {
-            var sut = new Wrapper();
-
-            Action action = () => sut.Use<object>(null!);
-
-            action.Should().Throw<ArgumentNullException>();
-        }
-
-        // ReSharper disable once ClassNeverInstantiated.Local
-        private class DefaultConstructor
+    // ReSharper disable once ClassNeverInstantiated.Local
+    private class MultipleInternalConstructors
+    {
+        // ReSharper disable once UnusedMember.Global
+        // ReSharper disable once UnusedMember.Local
+        // ReSharper disable once UnusedParameter.Local
+        internal MultipleInternalConstructors(ITargetService service)
         {
         }
 
-        // ReSharper disable once ClassNeverInstantiated.Local
-        private class MultipleInternalConstructors
+        // ReSharper disable once UnusedMember.Global
+        // ReSharper disable once UnusedMember.Local
+        // ReSharper disable once UnusedParameter.Local
+        internal MultipleInternalConstructors(ILogger logger)
         {
-            // ReSharper disable once UnusedMember.Global
-            // ReSharper disable once UnusedMember.Local
-            // ReSharper disable once UnusedParameter.Local
-            internal MultipleInternalConstructors(ITargetService service)
-            {
-            }
+        }
+    }
 
-            // ReSharper disable once UnusedMember.Global
-            // ReSharper disable once UnusedMember.Local
-            // ReSharper disable once UnusedParameter.Local
-            internal MultipleInternalConstructors(ILogger logger)
-            {
-            }
+    // ReSharper disable once ClassNeverInstantiated.Local
+    private class MultiplePublicConstructors
+    {
+        // ReSharper disable once UnusedMember.Global
+        // ReSharper disable once UnusedMember.Local
+        public MultiplePublicConstructors(ITargetService service)
+        {
+            Service = service;
         }
 
-        // ReSharper disable once ClassNeverInstantiated.Local
-        private class MultiplePublicConstructors
+        // ReSharper disable once UnusedMember.Global
+        // ReSharper disable once UnusedMember.Local
+        public MultiplePublicConstructors(ILogger logger)
         {
-            // ReSharper disable once UnusedMember.Global
-            // ReSharper disable once UnusedMember.Local
-            public MultiplePublicConstructors(ITargetService service)
-            {
-                Service = service;
-            }
-
-            // ReSharper disable once UnusedMember.Global
-            // ReSharper disable once UnusedMember.Local
-            public MultiplePublicConstructors(ILogger logger)
-            {
-                Logger = logger;
-            }
-
-            public ILogger? Logger { get; }
-
-            public ITargetService? Service { get; }
+            Logger = logger;
         }
 
-        // ReSharper disable once ClassNeverInstantiated.Local
-        private class SingleInternalConstructor
-        {
-            internal SingleInternalConstructor(ILogger logger)
-            {
-                Logger = logger;
-            }
+        public ILogger? Logger { get; }
 
-            public ILogger Logger { get; }
+        public ITargetService? Service { get; }
+    }
+
+    // ReSharper disable once ClassNeverInstantiated.Local
+    private class SingleInternalConstructor
+    {
+        internal SingleInternalConstructor(ILogger logger)
+        {
+            Logger = logger;
         }
 
-        // ReSharper disable once ClassNeverInstantiated.Local
-        private class SinglePublicConstructor
+        public ILogger Logger { get; }
+    }
+
+    // ReSharper disable once ClassNeverInstantiated.Local
+    private class SinglePublicConstructor
+    {
+        // ReSharper disable once UnusedMember.Global
+        // ReSharper disable once UnusedMember.Local
+        public SinglePublicConstructor(ITargetService service)
         {
-            // ReSharper disable once UnusedMember.Global
-            // ReSharper disable once UnusedMember.Local
-            public SinglePublicConstructor(ITargetService service)
-            {
-                Service = service;
-            }
-
-            // ReSharper disable once UnusedMember.Global
-            // ReSharper disable once UnusedMember.Local
-            internal SinglePublicConstructor(ILogger logger)
-            {
-                Logger = logger;
-            }
-
-            public ILogger? Logger { get; }
-
-            public ITargetService? Service { get; }
+            Service = service;
         }
 
-        private class TargetSpecificConstructorWrapper : Wrapper<MultiplePublicConstructors>
+        // ReSharper disable once UnusedMember.Global
+        // ReSharper disable once UnusedMember.Local
+        internal SinglePublicConstructor(ILogger logger)
         {
-            protected override ConstructorInfo GetConstructor()
-            {
-                var constructors = typeof(MultiplePublicConstructors).GetConstructors()
-                    .Where(x => x.GetParameters().Any(y => y.ParameterType == typeof(ILogger)));
+            Logger = logger;
+        }
 
-                return constructors.Single();
-            }
+        public ILogger? Logger { get; }
+
+        public ITargetService? Service { get; }
+    }
+
+    private class TargetSpecificConstructorWrapper : Wrapper<MultiplePublicConstructors>
+    {
+        protected override ConstructorInfo GetConstructor()
+        {
+            var constructors = typeof(MultiplePublicConstructors).GetConstructors()
+                .Where(x => x.GetParameters().Any(y => y.ParameterType == typeof(ILogger)));
+
+            return constructors.Single();
         }
     }
 }

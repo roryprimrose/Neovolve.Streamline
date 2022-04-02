@@ -3,22 +3,21 @@
 [assembly: InternalsVisibleTo("Examples")]
 [assembly: InternalsVisibleTo("DynamicProxyGenAssembly2")]
 
-namespace Examples.External
+namespace Examples.External;
+
+using System;
+
+internal class InternalClass
 {
-    using System;
+    private readonly IInternalScope _scope;
 
-    internal class InternalClass
+    public InternalClass(IInternalScope scope)
     {
-        private readonly IInternalScope _scope;
+        _scope = scope;
+    }
 
-        public InternalClass(IInternalScope scope)
-        {
-            _scope = scope;
-        }
-
-        public string GetValue(Guid id)
-        {
-            return _scope.GetValue(id);
-        }
+    public string GetValue(Guid id)
+    {
+        return _scope.GetValue(id);
     }
 }

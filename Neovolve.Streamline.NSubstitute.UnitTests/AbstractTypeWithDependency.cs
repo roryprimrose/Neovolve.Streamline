@@ -2,11 +2,11 @@ namespace Neovolve.Streamline.NSubstitute.UnitTests;
 
 using System;
 
-public class TypeWithDependency
+public abstract class AbstractTypeWithDependency
 {
     private readonly ITargetService _service;
 
-    public TypeWithDependency(ITargetService service)
+    protected AbstractTypeWithDependency(ITargetService service)
     {
         _service = service;
     }

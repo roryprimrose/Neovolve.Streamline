@@ -1,9 +1,8 @@
-namespace Neovolve.Streamline.UnitTests
-{
-    using System;
+namespace Neovolve.Streamline.UnitTests;
 
-    public interface ITargetService : IDisposable
-    {
-        string GetValue(Guid id);
-    }
+using System;
+
+public interface ITargetService : IDisposable
+{
+    string GetValue(Guid id);
 }
