@@ -42,21 +42,16 @@ jobs:
         assemblyVersion: ${{ steps.gitversion.outputs.AssemblySemVer }}
         fileVersion: ${{ steps.gitversion.outputs.MajorMinorPatch }}
         informationalVersion: ${{ steps.gitversion.outputs.InformationalVersion }}  
-
-    - name: Setup dotnet v2.1
-      uses: actions/setup-dotnet@v1.8.0
-      with:
-        dotnet-version: '2.1.x' # SDK Version to use.
-
+        
     - name: Setup dotnet v3.1
       uses: actions/setup-dotnet@v1.8.0
       with:
         dotnet-version: '3.1.x' # SDK Version to use.
         
-    - name: Setup dotnet v5.0
+    - name: Setup dotnet v6.0
       uses: actions/setup-dotnet@v1.8.0
       with:
-        dotnet-version: '5.0.x' # SDK Version to use.
+        dotnet-version: '6.x' # SDK Version to use.
 
     - name: Restore
       run: dotnet restore
