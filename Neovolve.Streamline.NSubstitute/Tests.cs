@@ -1,19 +1,18 @@
-﻿namespace NSubstitute
+﻿namespace NSubstitute;
+
+using System;
+
+public abstract class Tests<T> : Neovolve.Streamline.Tests<T> where T : class
 {
-    using System;
-
-    public abstract class Tests<T> : Neovolve.Streamline.Tests<T> where T : class
+    protected Tests(params object[] services) : base(services)
     {
-        protected Tests(params object[] services) : base(services)
-        {
-        }
+    }
 
-        protected override object BuildService(Type type, string key)
-        {
-            var types = new[] {type};
-            var parameters = Array.Empty<object>();
+    protected override object BuildService(Type type, string key)
+    {
+        var types = new[] {type};
+        var parameters = Array.Empty<object>();
 
-            return Substitute.For(types, parameters);
-        }
+        return Substitute.For(types, parameters);
     }
 }

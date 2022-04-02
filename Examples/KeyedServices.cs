@@ -1,61 +1,60 @@
-﻿namespace Examples
+﻿namespace Examples;
+
+using System.Reflection;
+using FluentAssertions;
+using NSubstitute;
+using Xunit;
+
+public interface IDuplicateService
 {
-    using System.Reflection;
-    using FluentAssertions;
-    using NSubstitute;
-    using Xunit;
+    int GetValue();
+}
 
-    public interface IDuplicateService
+public class KeyedServices
+{
+    private readonly IDuplicateService _firstService;
+    private readonly IDuplicateService _secondService;
+
+    public KeyedServices(IDuplicateService firstService, IDuplicateService secondService)
     {
-        int GetValue();
+        _firstService = firstService;
+        _secondService = secondService;
     }
 
-    public class KeyedServices
+    public int AddValues()
     {
-        private readonly IDuplicateService _firstService;
-        private readonly IDuplicateService _secondService;
+        var firstValue = _firstService.GetValue();
+        var secondValue = _secondService.GetValue();
 
-        public KeyedServices(IDuplicateService firstService, IDuplicateService secondService)
-        {
-            _firstService = firstService;
-            _secondService = secondService;
-        }
+        return firstValue + secondValue;
+    }
+}
 
-        public int AddValues()
-        {
-            var firstValue = _firstService.GetValue();
-            var secondValue = _secondService.GetValue();
+public class KeyedServicesTests : Tests<KeyedServices>
+{
+    [Fact]
+    public void CanConfigureKeyedServices()
+    {
+        Service<IDuplicateService>("A").GetValue().Returns(3);
+        Service<IDuplicateService>("B").GetValue().Returns(15);
 
-            return firstValue + secondValue;
-        }
+        var actual = SUT.AddValues();
+
+        actual.Should().Be(18);
     }
 
-    public class KeyedServicesTests : Tests<KeyedServices>
+    protected override object ResolveService(ParameterInfo parameter)
     {
-        [Fact]
-        public void CanConfigureKeyedServices()
+        if (parameter.ParameterType != typeof(IDuplicateService))
         {
-            Service<IDuplicateService>("A").GetValue().Returns(3);
-            Service<IDuplicateService>("B").GetValue().Returns(15);
-
-            var actual = SUT.AddValues();
-
-            actual.Should().Be(18);
+            return base.ResolveService(parameter);
         }
 
-        protected override object ResolveService(ParameterInfo parameter)
+        if (parameter.Name == "firstService")
         {
-            if (parameter.ParameterType != typeof(IDuplicateService))
-            {
-                return base.ResolveService(parameter);
-            }
-
-            if (parameter.Name == "firstService")
-            {
-                return ResolveService(parameter.ParameterType, "A");
-            }
-
-            return ResolveService(parameter.ParameterType, "B");
+            return ResolveService(parameter.ParameterType, "A");
         }
+
+        return ResolveService(parameter.ParameterType, "B");
     }
 }

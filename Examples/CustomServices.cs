@@ -1,51 +1,50 @@
-﻿namespace Examples
-{
-    using System;
-    using FluentAssertions;
-    using NSubstitute;
-    using Xunit;
+﻿namespace Examples;
 
-    public interface ICustomService
+using System;
+using FluentAssertions;
+using NSubstitute;
+using Xunit;
+
+public interface ICustomService
+{
+    string GetValue(Guid id);
+}
+
+public class CustomServices
+{
+    private readonly ICustomService _service;
+
+    public CustomServices(ICustomService service)
     {
-        string GetValue(Guid id);
+        _service = service;
     }
 
-    public class CustomServices
+    public string GetValue(Guid id)
     {
-        private readonly ICustomService _service;
+        return _service.GetValue(id);
+    }
+}
 
-        public CustomServices(ICustomService service)
-        {
-            _service = service;
-        }
+public class CustomServicesTests : Tests<CustomServices>
+{
+    [Fact]
+    public void CanUseCustomService()
+    {
+        var id = Guid.NewGuid();
+        var wrapper = new Wrapper();
 
+        Use(wrapper);
+
+        var actual = SUT.GetValue(id);
+
+        actual.Should().Be(id.ToString());
+    }
+
+    private class Wrapper : ICustomService
+    {
         public string GetValue(Guid id)
         {
-            return _service.GetValue(id);
-        }
-    }
-
-    public class CustomServicesTests : Tests<CustomServices>
-    {
-        [Fact]
-        public void CanUseCustomService()
-        {
-            var id = Guid.NewGuid();
-            var wrapper = new Wrapper();
-
-            Use(wrapper);
-
-            var actual = SUT.GetValue(id);
-
-            actual.Should().Be(id.ToString());
-        }
-
-        private class Wrapper : ICustomService
-        {
-            public string GetValue(Guid id)
-            {
-                return id.ToString();
-            }
+            return id.ToString();
         }
     }
 }

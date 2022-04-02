@@ -1,42 +1,41 @@
-﻿namespace Examples
+﻿namespace Examples;
+
+using System;
+using Divergic.Logging.Xunit;
+using FluentAssertions;
+using Microsoft.Extensions.Logging;
+using NSubstitute;
+using Xunit;
+using Xunit.Abstractions;
+
+public class TestClassConstructorParameters
 {
-    using System;
-    using Divergic.Logging.Xunit;
-    using FluentAssertions;
-    using Microsoft.Extensions.Logging;
-    using NSubstitute;
-    using Xunit;
-    using Xunit.Abstractions;
+    private readonly ILogger _logger;
 
-    public class TestClassConstructorParameters
+    public TestClassConstructorParameters(ILogger logger)
     {
-        private readonly ILogger _logger;
-
-        public TestClassConstructorParameters(ILogger logger)
-        {
-            _logger = logger;
-        }
-
-        public void DoSomething()
-        {
-            _logger.LogInformation("Hey, we did something at {0}", DateTimeOffset.UtcNow);
-        }
+        _logger = logger;
     }
 
-    public class TestClassConstructorParametersTests : Tests<TestClassConstructorParameters>
+    public void DoSomething()
     {
-        public TestClassConstructorParametersTests(ITestOutputHelper output) : base(output.BuildLogger())
-        {
-        }
+        _logger.LogInformation("Hey, we did something at {0}", DateTimeOffset.UtcNow);
+    }
+}
 
-        [Fact]
-        public void CanUseTestConstructorArgument()
-        {
-            var logger = Service<ICacheLogger>();
+public class TestClassConstructorParametersTests : Tests<TestClassConstructorParameters>
+{
+    public TestClassConstructorParametersTests(ITestOutputHelper output) : base(output.BuildLogger())
+    {
+    }
 
-            SUT.DoSomething();
+    [Fact]
+    public void CanUseTestConstructorArgument()
+    {
+        var logger = Service<ICacheLogger>();
 
-            logger.Entries.Should().HaveCount(1);
-        }
+        SUT.DoSomething();
+
+        logger.Entries.Should().HaveCount(1);
     }
 }

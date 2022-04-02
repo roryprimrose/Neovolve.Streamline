@@ -1,9 +1,8 @@
-﻿namespace Examples.External
-{
-    using System;
+﻿namespace Examples.External;
 
-    public interface IPublicInterface
-    {
-        string GetValue(Guid id);
-    }
+using System;
+
+public interface IPublicInterface
+{
+    string GetValue(Guid id);
 }

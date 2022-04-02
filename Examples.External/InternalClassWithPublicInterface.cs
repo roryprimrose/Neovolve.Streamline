@@ -1,19 +1,18 @@
-﻿namespace Examples.External
+﻿namespace Examples.External;
+
+using System;
+
+internal class InternalClassWithPublicInterface : IPublicInterface
 {
-    using System;
+    private readonly IInternalScope _scope;
 
-    internal class InternalClassWithPublicInterface : IPublicInterface
+    public InternalClassWithPublicInterface(IInternalScope scope)
     {
-        private readonly IInternalScope _scope;
+        _scope = scope;
+    }
 
-        public InternalClassWithPublicInterface(IInternalScope scope)
-        {
-            _scope = scope;
-        }
-
-        public string GetValue(Guid id)
-        {
-            return _scope.GetValue(id);
-        }
+    public string GetValue(Guid id)
+    {
+        return _scope.GetValue(id);
     }
 }

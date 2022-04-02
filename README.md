@@ -123,6 +123,7 @@ This package brings several advantages.
 [Using test class constructor parameters](Examples/TestClassConstructorParameters.cs)  
 [SUT as partial mock](Examples/PartialSUTMock.cs)  
 [SUT as full mock](Examples/FullSUTMock.cs)  
+[SUT as abstract class](Examples/AbstractType.cs)  
 
 ## Supporters
 

@@ -1,9 +1,8 @@
-namespace Neovolve.Streamline.NSubstitute.UnitTests
-{
-    using System;
+namespace Neovolve.Streamline.NSubstitute.UnitTests;
 
-    public interface ITargetService
-    {
-        string GetValue(Guid id);
-    }
+using System;
+
+public interface ITargetService
+{
+    string GetValue(Guid id);
 }

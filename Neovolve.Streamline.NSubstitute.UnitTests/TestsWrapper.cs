@@ -1,11 +1,10 @@
-namespace Neovolve.Streamline.NSubstitute.UnitTests
-{
-    using global::NSubstitute;
+namespace Neovolve.Streamline.NSubstitute.UnitTests;
 
-    public class TestsWrapper<T> : Tests<T> where T : class
+using global::NSubstitute;
+
+public class TestsWrapper<T> : Tests<T> where T : class
+{
+    public TestsWrapper(params object[] values) : base(values)
     {
-        public TestsWrapper(params object[] values) : base(values)
-        {
-        }
     }
 }
