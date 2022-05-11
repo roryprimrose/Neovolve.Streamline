@@ -3,16 +3,15 @@ Neovolve.Streamline provides NuGet packages to simplify the unit testing setup (
 
 [![GitHub license](https://img.shields.io/badge/License-MIT-blue.svg)](https://github.com/roryprimrose/Neovolve.Streamline/blob/master/LICENSE.md)&nbsp;[![Actions Status](https://github.com/roryprimrose/Neovolve.Streamline/workflows/CI/badge.svg)](https://github.com/roryprimrose/Neovolve.Streamline/actions)
 
-| Package | NuGet |
-| ----: |:----:| 
-| Neovolve.Streamline | [![Nuget](https://img.shields.io/nuget/v/Neovolve.Streamline.svg) ![Nuget](https://img.shields.io/nuget/dt/Neovolve.Streamline.svg)](https://www.nuget.org/packages/Neovolve.Streamline) |
+|                         Package |                                                                                                               NuGet                                                                                                               |
+| ------------------------------: | :-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------: |
+|             Neovolve.Streamline |                     [![Nuget](https://img.shields.io/nuget/v/Neovolve.Streamline.svg) ![Nuget](https://img.shields.io/nuget/dt/Neovolve.Streamline.svg)](https://www.nuget.org/packages/Neovolve.Streamline)                      |
 | Neovolve.Streamline.NSubstitute | [![Nuget](https://img.shields.io/nuget/v/Neovolve.Streamline.NSubstitute.svg)&nbsp;![Nuget](https://img.shields.io/nuget/dt/Neovolve.Streamline.NSubstitute.svg)](https://www.nuget.org/packages/Neovolve.Streamline.NSubstitute) |
 
 - [Use Case](#use-case)
 - [Advantages](#advantages)
-- [Examples](#examples)
+- [Examples using NSubstitute](#examples-using-nsubstitute)
 - [Supporters](#supporters)
-
 ## Use Case
 
 Consider the following class and the setup required to unit test it.
