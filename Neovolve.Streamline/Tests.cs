@@ -137,6 +137,10 @@ public abstract class Tests<T> : IDisposable where T : class
     /// <returns>Returns an instance of the specified service type with the specified key.</returns>
     protected abstract object BuildService(Type type, string key);
 
+    /// <summary>
+    /// Builds and returns an instance of the system under test (SUT) using the constructor and parameter values obtained from <see cref="GetConstructor"/> and <see cref="ResolveService"/> respectively.
+    /// </summary>
+    /// <returns>Returns an instance of the SUT.</returns>
     protected virtual T BuildSUT()
     {
         var constructor = GetConstructor();
