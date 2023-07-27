@@ -96,7 +96,7 @@ public abstract class Tests<T> : IDisposable where T : class
     /// <returns>Returns the stored service instance.</returns>
     /// <remarks>
     ///     This method allows a unit test provide its own service instance rather than having one created by
-    ///     <see cref="Service{TService}" />.
+    ///     <see cref="Service{TService}()" />.
     /// </remarks>
     public TService Use<TService>(TService service)
     {
@@ -113,7 +113,7 @@ public abstract class Tests<T> : IDisposable where T : class
     /// <remarks>
     ///     <para>
     ///         This method allows a unit test to provide its own service instance rather than having one created by
-    ///         <see cref="Service{TService}" />.
+    ///         <see cref="Service{TService}()" />.
     ///     </para>
     ///     <para>
     ///         The <paramref name="key" /> parameter allows a unit test to store multiple instances of a service type.
@@ -138,7 +138,7 @@ public abstract class Tests<T> : IDisposable where T : class
     protected abstract object BuildService(Type type, string key);
 
     /// <summary>
-    /// Builds and returns an instance of the system under test (SUT) using the constructor and parameter values obtained from <see cref="GetConstructor"/> and <see cref="ResolveService"/> respectively.
+    /// Builds and returns an instance of the system under test (SUT) using the constructor and parameter values obtained from <see cref="GetConstructor"/> and <see cref="ResolveService(ParameterInfo)"/> respectively.
     /// </summary>
     /// <returns>Returns an instance of the SUT.</returns>
     protected virtual T BuildSUT()
@@ -356,7 +356,7 @@ public abstract class Tests<T> : IDisposable where T : class
     /// </summary>
     /// <remarks>
     ///     This property will return the same SUT instance for the lifetime of the class unless there are any changes made by
-    ///     using the <see cref="Service{TService}" /> or <see cref="Use{TService}" /> methods.
+    ///     using the <see cref="Service{TService}()" /> or <see cref="Use{TService}(TService)" /> methods.
     /// </remarks>
     public T SUT
     {

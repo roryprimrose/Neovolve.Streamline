@@ -8,12 +8,16 @@ using System.Reflection;
 /// </summary>
 /// <typeparam name="T">The type of the class under test.</typeparam>
 /// <remarks>
-/// This class uses <see cref="Substitute.For"/> to create services required when reading from <see cref="SUT" />
-/// and uses <see cref="Substitute.For"/> to create <see cref="SUT" /> itself.
+/// This class uses <see cref="Substitute.For"/> to create services required when reading from <see cref="Neovolve.Streamline.Tests{T}.SUT" />
+/// and uses <see cref="Substitute.For"/> to create <see cref="Neovolve.Streamline.Tests{T}.SUT" /> itself.
 /// This class is typically used when a full mock of the class under test is required.
 /// </remarks>
 public abstract class TestsSubstituteOf<T> : Tests<T> where T : class
 {
+    /// <summary>
+    /// Initializes a new instance of the <see cref="TestsSubstituteOf{T}"/> class.
+    /// </summary>
+    /// <param name="services">The services used to create the <see cref="Neovolve.Streamline.Tests{T}.SUT" />.</param>
     protected TestsSubstituteOf(params object[] services) : base(services)
     {
     }
