@@ -1,7 +1,7 @@
 # Neovolve.Streamline
 Neovolve.Streamline provides NuGet packages to simplify the unit testing setup (Arrange in AAA unit testing) of classes and their dependencies. The `Neovolve.Streamline` package provides the base logic to creating a SUT (System Under Test) along with any service dependencies that it requires. Other packages (such as `Neovolve.Streamline.NSubstitute`) provide the bridge between `Neovolve.Streamline` and another tool that creates the service dependencies.
 
-[![GitHub license](https://img.shields.io/badge/License-MIT-blue.svg)](https://github.com/roryprimrose/Neovolve.Streamline/blob/master/LICENSE.md)&nbsp;[![Actions Status](https://github.com/roryprimrose/Neovolve.Streamline/workflows/CI/badge.svg)](https://github.com/roryprimrose/Neovolve.Streamline/actions)
+[![GitHub license](https://img.shields.io/badge/License-MIT-blue.svg)](https://github.com/roryprimrose/Neovolve.Streamline/blob/main/LICENSE.md)&nbsp;[![Actions Status](https://github.com/roryprimrose/Neovolve.Streamline/workflows/CI/badge.svg)](https://github.com/roryprimrose/Neovolve.Streamline/actions)
 
 |                         Package |                                                                                                               NuGet                                                                                                               |
 | ------------------------------: | :-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------: |
