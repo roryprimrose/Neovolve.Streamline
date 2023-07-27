@@ -137,6 +137,7 @@ jobs:
       run: |
         nuget push Neovolve.Streamline.${{ env.NuGetVersionV2 }}.symbols.nupkg $MYGET_APIKEY -source https://www.myget.org/F/neovolve/api/v2/package
         nuget push Neovolve.Streamline.NSubstitute.${{ env.NuGetVersionV2 }}.symbols.nupkg $MYGET_APIKEY -source https://www.myget.org/F/neovolve/api/v2/package
+      continue-on-error: true # just in case MyGet is down
       
         # End temporary steps
 
