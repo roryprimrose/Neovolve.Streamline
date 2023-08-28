@@ -4,6 +4,7 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Threading.Tasks;
 using Divergic.Logging.Xunit;
 using FluentAssertions;
 using Microsoft.Extensions.Logging;
@@ -116,6 +117,103 @@ public class TestsTests
     }
 
     [Fact]
+    public async Task DisposeAsyncCleansUpServices()
+    {
+        var id = Guid.NewGuid();
+        var expected = Guid.NewGuid().ToString();
+
+        var wrapper = new Wrapper();
+
+        var service = wrapper.Service<ITargetService>();
+
+        service.GetValue(id).Returns(expected);
+
+        // Make sure the SUT exists
+        wrapper.SUT.Should().NotBeNull();
+
+        await wrapper.DisposeAsync().ConfigureAwait(false);
+
+        await service.Received().DisposeAsync().ConfigureAwait(false);
+
+        var nextService = wrapper.Service<ITargetService>();
+
+        nextService.Should().NotBeSameAs(service);
+    }
+
+    [Fact]
+    public async Task DisposeAsyncCleansUpSUT()
+    {
+        var id = Guid.NewGuid();
+        var expected = Guid.NewGuid().ToString();
+
+        var wrapper = Substitute.ForPartsOf<Wrapper>();
+
+        var service = wrapper.Service<ITargetService>();
+
+        service.GetValue(id).Returns(expected);
+
+        // Make sure the SUT exists
+        var sut = wrapper.SUT;
+
+        sut.Should().NotBeNull();
+
+        await wrapper.DisposeAsync().ConfigureAwait(false);
+
+        await wrapper.Received().DisposeAsync().ConfigureAwait(false);
+
+        var nextSut = wrapper.SUT;
+
+        nextSut.Should().NotBeSameAs(sut);
+    }
+
+    [Fact]
+    public async Task DisposeAsyncContinuesToDisposeServicesWhenOneServiceDisposeThrowsException()
+    {
+        var id = Guid.NewGuid();
+        var expected = Guid.NewGuid().ToString();
+
+        using var stream = Substitute.ForPartsOf<MemoryStream>();
+        var wrapper = new Wrapper();
+
+        wrapper.Use(stream);
+
+        var service = wrapper.Service<ITargetService>();
+
+        service.GetValue(id).Returns(expected);
+        service.When(x => x.DisposeAsync()).Do(_ => throw new TimeoutException());
+
+        // Make sure the SUT exists
+        wrapper.SUT.Should().NotBeNull();
+
+        var action = async () => await wrapper.DisposeAsync().ConfigureAwait(false);
+
+        await action.Should().NotThrowAsync().ConfigureAwait(false);
+        await service.Received().DisposeAsync().ConfigureAwait(false);
+        await stream.Received().DisposeAsync().ConfigureAwait(false);
+    }
+
+    [Fact]
+    public async Task DisposeAsyncDoesNotThrowExceptionWhenDisposingServiceThrowsException()
+    {
+        var id = Guid.NewGuid();
+        var expected = Guid.NewGuid().ToString();
+
+        var wrapper = new Wrapper();
+
+        var service = wrapper.Service<ITargetService>();
+
+        service.GetValue(id).Returns(expected);
+        service.When(x => x.DisposeAsync()).Do(_ => throw new TimeoutException());
+
+        // Make sure the SUT exists
+        wrapper.SUT.Should().NotBeNull();
+
+        var action = async () => await wrapper.DisposeAsync().ConfigureAwait(false);
+
+        await action.Should().NotThrowAsync().ConfigureAwait(false);
+    }
+
+    [Fact]
     public void DisposeCleansUpServices()
     {
         var id = Guid.NewGuid();
@@ -182,7 +280,7 @@ public class TestsTests
         // Make sure the SUT exists
         wrapper.SUT.Should().NotBeNull();
 
-        Action action = () => wrapper.Dispose();
+        var action = () => wrapper.Dispose();
 
         action.Should().NotThrow();
         service.Received().Dispose();
@@ -205,7 +303,7 @@ public class TestsTests
         // Make sure the SUT exists
         wrapper.SUT.Should().NotBeNull();
 
-        Action action = () => wrapper.Dispose();
+        var action = () => wrapper.Dispose();
 
         action.Should().NotThrow();
     }
@@ -275,7 +373,7 @@ public class TestsTests
     {
         var wrapper = new Wrapper<MultipleInternalConstructors>();
 
-        Action action = () =>
+        var action = () =>
         {
             // ReSharper disable once UnusedVariable
             var sut = wrapper.SUT;
@@ -291,7 +389,7 @@ public class TestsTests
     {
         var wrapper = new Wrapper<MultiplePublicConstructors>();
 
-        Action action = () =>
+        var action = () =>
         {
             // ReSharper disable once UnusedVariable
             var sut = wrapper.SUT;

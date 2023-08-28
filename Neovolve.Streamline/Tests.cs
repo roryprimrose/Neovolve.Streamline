@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Threading.Tasks;
 
 /// <summary>
 ///     The <see cref="Tests{T}" /> class is used to define a base class for unit tests that configures a single system
@@ -14,7 +15,7 @@ using System.Reflection;
 ///     This class provides a set of helper methods for creating and managing the SUT instance, as well as any dependencies
 ///     that it may have.
 /// </remarks>
-public abstract class Tests<T> : IDisposable where T : class
+public abstract class Tests<T> : IAsyncDisposable, IDisposable where T : class
 {
     private readonly Dictionary<string, object> _services = new();
     private T? _sut;
@@ -35,6 +36,15 @@ public abstract class Tests<T> : IDisposable where T : class
     public void Dispose()
     {
         Dispose(true);
+        GC.SuppressFinalize(this);
+    }
+
+    /// <inheritdoc />
+    public virtual async ValueTask DisposeAsync()
+    {
+        await DisposeAsyncCore().ConfigureAwait(false);
+
+        Dispose(disposing: false);
         GC.SuppressFinalize(this);
     }
 
@@ -138,7 +148,8 @@ public abstract class Tests<T> : IDisposable where T : class
     protected abstract object BuildService(Type type, string key);
 
     /// <summary>
-    /// Builds and returns an instance of the system under test (SUT) using the constructor and parameter values obtained from <see cref="GetConstructor"/> and <see cref="ResolveService(ParameterInfo)"/> respectively.
+    ///     Builds and returns an instance of the system under test (SUT) using the constructor and parameter values obtained
+    ///     from <see cref="GetConstructor" /> and <see cref="ResolveService(ParameterInfo)" /> respectively.
     /// </summary>
     /// <returns>Returns an instance of the SUT.</returns>
     protected virtual T BuildSUT()
@@ -248,9 +259,9 @@ public abstract class Tests<T> : IDisposable where T : class
     {
         var cacheKey = GetCacheKey(type, key);
 
-        if (_services.ContainsKey(cacheKey))
+        if (_services.TryGetValue(cacheKey, out var existingService))
         {
-            return _services[cacheKey];
+            return existingService;
         }
 
         var service = BuildService(type, key);
@@ -294,23 +305,63 @@ public abstract class Tests<T> : IDisposable where T : class
         return type.AssemblyQualifiedName + "|" + key;
     }
 
-    private void DisposeServices()
+    private async Task DisposeAsyncCore()
     {
-        var services = _services.Values.OfType<IDisposable>();
-
-        foreach (var service in services)
+        if (SUT is IAsyncDisposable sut)
         {
+            await sut.DisposeAsync().ConfigureAwait(false);
+        }
+
+        _sut = null;
+
+        foreach (var service in _services)
+        {
+            var disposableService = service.Value as IAsyncDisposable;
+
+            if (disposableService == null)
+            {
+                continue;
+            }
+
             try
             {
-                service.Dispose();
+                await disposableService.DisposeAsync().ConfigureAwait(false);
             }
             catch
             {
                 // The service failed to dispose but we don't want to crash the test runner for this kind of failure
             }
+            finally
+            {
+                _services.Remove(service.Key);
+            }
         }
+    }
 
-        _services.Clear();
+    private void DisposeServices()
+    {
+        foreach (var service in _services)
+        {
+            var disposableService = service.Value as IDisposable;
+
+            if (disposableService == null)
+            {
+                continue;
+            }
+
+            try
+            {
+                disposableService.Dispose();
+            }
+            catch
+            {
+                // The service failed to dispose but we don't want to crash the test runner for this kind of failure
+            }
+            finally
+            {
+                _services.Remove(service.Key);
+            }
+        }
     }
 
     private void DisposeSUT()
