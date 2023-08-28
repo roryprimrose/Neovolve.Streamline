@@ -62,7 +62,7 @@ public class TestsTests
         wrapper.SUT.Service.Should().NotBeNull();
         wrapper.SUT.Logger.Should().BeNull();
     }
-
+    
     [Fact]
     public void CanCreateSUTFromTypeWithSpecifiedConstructor()
     {
