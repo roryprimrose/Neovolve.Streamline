@@ -38,6 +38,21 @@ public class TestsSubstituteOfTests
     }
 
     [Fact]
+    public void CanSubstituteTypeWithDefaultConstructor()
+    {
+        var id = Guid.NewGuid();
+        var expected = Guid.NewGuid().ToString();
+
+        var wrapper = new TestsSubstituteOfWrapper<TypeWithDefaultConstructor>();
+
+        wrapper.SUT.GetCustomValue(id).Returns(expected);
+
+        var actual = wrapper.SUT.GetValue(id);
+
+        actual.Should().Be(expected);
+    }
+
+    [Fact]
     public void CanSubstituteVirtualMethod()
     {
         var id = Guid.NewGuid();
