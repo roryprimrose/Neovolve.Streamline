@@ -109,6 +109,9 @@ This package brings several advantages.
  - Service dependencies are automatically created
  - The SUT instance is automatically created with any required service dependencies
  - Adding, removing or re-ordering constructor parameters have limited or no impact on existing unit tests
+ - Services and the SUT are automatically disposed via `IDisposable` and/or `IAsyncDisposable`
+    - **NOTE:** This requires that either the test framework implicitly supports disposal or manual integration between the test framework and disposal is required.
+    - xUnit implicitly supports `IDisposable` but does not yet support `IAsyncDisposable` until v3 is released. In the meantime, the test class can use `IAsyncLifetime` to support `IAsyncDisposable`. See https://github.com/xunit/xunit/issues/2017 for further information.
 
 ## Examples using NSubstitute
 
