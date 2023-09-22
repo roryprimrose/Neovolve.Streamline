@@ -31,9 +31,8 @@ public class CustomServicesTests : Tests<CustomServices>
     public void CanUseCustomService()
     {
         var id = Guid.NewGuid();
-        var wrapper = new Wrapper();
 
-        Use(wrapper);
+        Use<Wrapper>();
 
         var actual = SUT.GetValue(id);
 

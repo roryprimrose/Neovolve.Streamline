@@ -115,17 +115,17 @@ This package brings several advantages.
 
 ## Examples using NSubstitute
 
-[SUT with multiple parameters](Examples/MultipleParameters.cs)  
-[SUT with single parameter](Examples/SingleParameter.cs)  
-[SUT with no constructor parameters](Examples/NoConstructorParameters.cs)  
-[SUT with custom services](Examples/CustomServices.cs)  
-[SUT using keyed services](Examples/KeyedServices.cs)  
-[SUT declared as internal having public interface](Examples/InternalTypePublicInterface.cs)  
-[SUT declared as internal via proxy](Examples/InternalScopedTypes.cs)  
-[Using test class constructor parameters](Examples/TestClassConstructorParameters.cs)  
-[SUT as partial mock](Examples/PartialSUTMock.cs)  
-[SUT as full mock](Examples/FullSUTMock.cs)  
-[SUT as abstract class](Examples/AbstractType.cs)  
+[SUT with multiple parameters](https://github.com/roryprimrose/Neovolve.Streamline/blob/main/Examples/MultipleParameters.cs)  
+[SUT with single parameter](https://github.com/roryprimrose/Neovolve.Streamline/blob/main/Examples/SingleParameter.cs)  
+[SUT with no constructor parameters](https://github.com/roryprimrose/Neovolve.Streamline/blob/main/Examples/NoConstructorParameters.cs)  
+[SUT with custom services](https://github.com/roryprimrose/Neovolve.Streamline/blob/main/Examples/CustomServices.cs)  
+[SUT using keyed services](https://github.com/roryprimrose/Neovolve.Streamline/blob/main/Examples/KeyedServices.cs)  
+[SUT declared as internal having public interface](https://github.com/roryprimrose/Neovolve.Streamline/blob/main/Examples/InternalTypePublicInterface.cs)  
+[SUT declared as internal via proxy](https://github.com/roryprimrose/Neovolve.Streamline/blob/main/Examples/InternalScopedTypes.cs)  
+[Using test class constructor parameters](https://github.com/roryprimrose/Neovolve.Streamline/blob/main/Examples/TestClassConstructorParameters.cs)  
+[SUT as partial mock](https://github.com/roryprimrose/Neovolve.Streamline/blob/main/Examples/PartialSUTMock.cs)  
+[SUT as full mock](https://github.com/roryprimrose/Neovolve.Streamline/blob/main/Examples/FullSUTMock.cs)  
+[SUT as abstract class](https://github.com/roryprimrose/Neovolve.Streamline/blob/main/Examples/AbstractType.cs)  
 
 ## Supporters
 
