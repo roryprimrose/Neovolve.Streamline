@@ -99,6 +99,22 @@ public abstract class Tests<T> : IAsyncDisposable, IDisposable where T : class
     }
 
     /// <summary>
+    ///     Stores the specified service type to be used in a unit test.
+    /// </summary>
+    /// <typeparam name="TService">The type of the service to store.</typeparam>
+    /// <returns>Returns the stored service instance.</returns>
+    /// <remarks>
+    ///     This method allows a unit test provide its own service instance rather than having one created by
+    ///     <see cref="Service{TService}()" />.
+    /// </remarks>
+    public TService Use<TService>() where TService : new()
+    {
+        var service = new TService();
+
+        return Use(service, string.Empty);
+    }
+
+    /// <summary>
     ///     Stores the specified service instance to be used in a unit test.
     /// </summary>
     /// <typeparam name="TService">The type of the service to store.</typeparam>

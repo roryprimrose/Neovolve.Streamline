@@ -62,7 +62,7 @@ public class TestsTests
         wrapper.SUT.Service.Should().NotBeNull();
         wrapper.SUT.Logger.Should().BeNull();
     }
-    
+
     [Fact]
     public void CanCreateSUTFromTypeWithSpecifiedConstructor()
     {
@@ -131,9 +131,9 @@ public class TestsTests
         // Make sure the SUT exists
         wrapper.SUT.Should().NotBeNull();
 
-        await wrapper.DisposeAsync().ConfigureAwait(false);
+        await wrapper.DisposeAsync();
 
-        await service.Received().DisposeAsync().ConfigureAwait(false);
+        await service.Received().DisposeAsync();
 
         var nextService = wrapper.Service<ITargetService>();
 
@@ -157,9 +157,9 @@ public class TestsTests
 
         sut.Should().NotBeNull();
 
-        await wrapper.DisposeAsync().ConfigureAwait(false);
+        await wrapper.DisposeAsync();
 
-        await wrapper.Received().DisposeAsync().ConfigureAwait(false);
+        await wrapper.Received().DisposeAsync();
 
         var nextSut = wrapper.SUT;
 
@@ -185,11 +185,11 @@ public class TestsTests
         // Make sure the SUT exists
         wrapper.SUT.Should().NotBeNull();
 
-        var action = async () => await wrapper.DisposeAsync().ConfigureAwait(false);
+        var action = async () => await wrapper.DisposeAsync();
 
-        await action.Should().NotThrowAsync().ConfigureAwait(false);
-        await service.Received().DisposeAsync().ConfigureAwait(false);
-        await stream.Received().DisposeAsync().ConfigureAwait(false);
+        await action.Should().NotThrowAsync();
+        await service.Received().DisposeAsync();
+        await stream.Received().DisposeAsync();
     }
 
     [Fact]
@@ -208,9 +208,9 @@ public class TestsTests
         // Make sure the SUT exists
         wrapper.SUT.Should().NotBeNull();
 
-        var action = async () => await wrapper.DisposeAsync().ConfigureAwait(false);
+        var action = async () => await wrapper.DisposeAsync();
 
-        await action.Should().NotThrowAsync().ConfigureAwait(false);
+        await action.Should().NotThrowAsync();
     }
 
     [Fact]
@@ -401,6 +401,17 @@ public class TestsTests
     }
 
     [Fact]
+    public void UseByKeyReturnsService()
+    {
+        var key = Guid.NewGuid().ToString();
+        var wrapper = new Wrapper();
+
+        var actual = wrapper.Use(_logger, key);
+
+        actual.Should().BeSameAs(_logger);
+    }
+
+    [Fact]
     public void UseByKeyStoresCustomService()
     {
         var key = Guid.NewGuid().ToString();
@@ -487,6 +498,16 @@ public class TestsTests
     }
 
     [Fact]
+    public void UseReturnsService()
+    {
+        var wrapper = new Wrapper();
+
+        var actual = wrapper.Use(_logger);
+
+        actual.Should().BeSameAs(_logger);
+    }
+
+    [Fact]
     public void UseStoresCustomService()
     {
         var expected = Substitute.For<ITargetService>();
@@ -520,6 +541,72 @@ public class TestsTests
         Action action = () => sut.Use<object>(null!);
 
         action.Should().Throw<ArgumentNullException>();
+    }
+
+    [Fact]
+    public void UseTOverwritesExistingService()
+    {
+        var service = Substitute.For<ITargetService>();
+
+        var wrapper = new Wrapper();
+
+        wrapper.Use(service);
+        wrapper.Use<TargetService>();
+
+        var actual = wrapper.Service<ITargetService>();
+
+        actual.Should().NotBeSameAs(service);
+    }
+
+    [Fact]
+    public void UseTRegistersServicesAsMultipleTypes()
+    {
+        var wrapper = new Wrapper();
+
+        wrapper.Use<TargetService>();
+
+        var expected = wrapper.Service<TargetService>();
+
+        wrapper.Service<ITargetService>().Should().BeSameAs(expected);
+        wrapper.Service<IDisposable>().Should().BeSameAs(expected);
+    }
+
+    [Fact]
+    public void UseTResetsSUTWhenServiceUpdated()
+    {
+        var wrapper = new Wrapper();
+
+        wrapper.Use<TargetService>();
+
+        var firstSut = wrapper.SUT;
+
+        wrapper.Use<TargetService>();
+
+        var secondSut = wrapper.SUT;
+
+        firstSut.Should().NotBeSameAs(secondSut);
+    }
+
+    [Fact]
+    public void UseTReturnsService()
+    {
+        var wrapper = new Wrapper();
+
+        var actual = wrapper.Use<TargetService>();
+
+        actual.Should().BeOfType<TargetService>();
+    }
+
+    [Fact]
+    public void UseTStoresCustomService()
+    {
+        var wrapper = new Wrapper();
+
+        wrapper.Use<TargetService>();
+
+        var actual = wrapper.Service<ITargetService>();
+
+        actual.Should().BeOfType<TargetService>();
     }
 
     // ReSharper disable once ClassNeverInstantiated.Local
