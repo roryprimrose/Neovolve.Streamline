@@ -28,8 +28,10 @@ public abstract class TestsBase : IDisposable
     /// <param name="services">The services to use when creating the SUT.</param>
     protected TestsBase(params object[] services)
     {
-        foreach (var service in services)
+        for (var index = 0; index < services.Length; index++)
         {
+            var service = services[index];
+
             StoreServiceAsAllTypes(service);
         }
     }
@@ -331,8 +333,10 @@ public abstract class TestsBase : IDisposable
         // Find all the implemented interfaces and return them
         var interfaceTypes = sourceType.GetInterfaces();
 
-        foreach (var interfaceType in interfaceTypes)
+        for (var index = 0; index < interfaceTypes.Length; index++)
         {
+            var interfaceType = interfaceTypes[index];
+
             yield return interfaceType;
         }
 
@@ -368,9 +372,13 @@ public abstract class TestsBase : IDisposable
 
         _sut = null;
 
-        foreach (var service in _services)
+        // Copy the keys so that we can safely enumerate them and remove the services from the dictionary
+        var keys = _services.Keys.ToList();
+
+        foreach (var key in keys)
         {
-            var disposableService = service.Value as IAsyncDisposable;
+            var service = _services[key];
+            var disposableService = service as IAsyncDisposable;
 
             if (disposableService == null)
             {
@@ -383,11 +391,11 @@ public abstract class TestsBase : IDisposable
             }
             catch
             {
-                // The service failed to dispose but we don't want to crash the test runner for this kind of failure
+                // The service failed to dispose, but we don't want to crash the test runner for this kind of failure
             }
             finally
             {
-                _services.Remove(service.Key);
+                _services.Remove(key);
             }
         }
     }
@@ -395,9 +403,13 @@ public abstract class TestsBase : IDisposable
 
     private void DisposeServices()
     {
-        foreach (var service in _services)
+        // Create a copy of the keys so that we can safely enumerate the list and remove services from the dictionary
+        var keys = _services.Keys.ToList();
+
+        foreach (var key in keys)
         {
-            var disposableService = service.Value as IDisposable;
+            var service = _services[key];
+            var disposableService = service as IDisposable;
 
             if (disposableService == null)
             {
@@ -414,7 +426,7 @@ public abstract class TestsBase : IDisposable
             }
             finally
             {
-                _services.Remove(service.Key);
+                _services.Remove(key);
             }
         }
     }
