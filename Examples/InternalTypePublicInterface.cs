@@ -10,9 +10,6 @@ using Xunit;
 // Tests<T> points to the public interface
 public class InternalTypePublicInterface : Tests<IPublicInterface>
 {
-    // The actual SUT type to create is identified by the TargetType property
-    protected override Type TargetType => typeof(InternalClassWithPublicInterface);
-
     [Fact]
     public void CanCreateAndUseInternalTypes()
     {
@@ -25,4 +22,7 @@ public class InternalTypePublicInterface : Tests<IPublicInterface>
 
         actual.Should().Be(expected);
     }
+
+    // The actual SUT type to create is identified by the TargetType property
+    protected override Type TargetType => typeof(InternalClassWithPublicInterface);
 }

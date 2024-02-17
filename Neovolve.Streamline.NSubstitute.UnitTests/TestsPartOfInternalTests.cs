@@ -5,7 +5,7 @@ using FluentAssertions;
 using global::NSubstitute;
 using Xunit;
 
-public class TestsPartOfTests
+public class TestsPartOfInternalTests
 {
     [Fact]
     public void CanPartialMockSUT()
@@ -13,7 +13,7 @@ public class TestsPartOfTests
         var id = Guid.NewGuid();
         var expected = Guid.NewGuid().ToString();
 
-        var wrapper = new TestsPartOfWrapper<TypeWithVirtual>();
+        var wrapper = new TestsPartOfInternalWrapper<TypeWithVirtual>();
 
         wrapper.SUT.GetValueEx(id).Returns(expected);
 
