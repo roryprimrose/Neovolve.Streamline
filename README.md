@@ -121,12 +121,8 @@ This package brings several advantages.
 [SUT with custom services](https://github.com/roryprimrose/Neovolve.Streamline/blob/main/Examples/CustomServices.cs)  
 [SUT using keyed services](https://github.com/roryprimrose/Neovolve.Streamline/blob/main/Examples/KeyedServices.cs)  
 [SUT declared as internal having public interface](https://github.com/roryprimrose/Neovolve.Streamline/blob/main/Examples/InternalTypePublicInterface.cs)  
-[SUT declared as internal via proxy](https://github.com/roryprimrose/Neovolve.Streamline/blob/main/Examples/InternalScopedTypes.cs)  
+[SUT declared as internal](https://github.com/roryprimrose/Neovolve.Streamline/blob/main/Examples/InternalScopedTypes.cs)  
 [Using test class constructor parameters](https://github.com/roryprimrose/Neovolve.Streamline/blob/main/Examples/TestClassConstructorParameters.cs)  
 [SUT as partial mock](https://github.com/roryprimrose/Neovolve.Streamline/blob/main/Examples/PartialSUTMock.cs)  
 [SUT as full mock](https://github.com/roryprimrose/Neovolve.Streamline/blob/main/Examples/FullSUTMock.cs)  
-[SUT as abstract class](https://github.com/roryprimrose/Neovolve.Streamline/blob/main/Examples/AbstractType.cs)  
-
-## Supporters
-
-This project is supported by [JetBrains](https://www.jetbrains.com/?from=ModelBuilder)
+[SUT as abstract class](https://github.com/roryprimrose/Neovolve.Streamline/blob/main/Examples/AbstractType.cs)
