@@ -1,23 +1,23 @@
 ﻿namespace NSubstitute;
 
 using System;
+using Neovolve.Streamline;
 
 /// <summary>
-///     The <see cref="Tests{T}" /> class defines the base class for NSubstitute-based tests.
+///     The <see cref="TestsInternal" /> class defines the base class for NSubstitute-based tests.
 /// </summary>
-/// <typeparam name="T">The type of the class under test.</typeparam>
 /// <remarks>
 ///     This class uses <see cref="Substitute.For" /> to create services required when reading from
-///     <see cref="Neovolve.Streamline.Tests{T}.SUT" />.
+///     <see cref="TestsBase.GetSUT{T}" />.
 ///     This class is typically used when the class under test is a concrete class.
 /// </remarks>
-public abstract class Tests<T> : Neovolve.Streamline.Tests<T> where T : class
+public abstract class TestsInternal : Neovolve.Streamline.TestsInternal
 {
     /// <summary>
-    ///     Initializes a new instance of the <see cref="Tests{T}" /> class.
+    ///     Initializes a new instance of the <see cref="TestsInternal" /> class.
     /// </summary>
-    /// <param name="services">The services used to create the <see cref="Neovolve.Streamline.Tests{T}.SUT" />.</param>
-    protected Tests(params object[] services) : base(services)
+    /// <param name="services">The services used to create the <see cref="TestsBase.GetSUT{T}" />.</param>
+    protected TestsInternal(params object[] services) : base(services)
     {
     }
 

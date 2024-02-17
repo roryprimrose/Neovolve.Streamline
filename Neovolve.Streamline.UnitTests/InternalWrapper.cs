@@ -3,9 +3,9 @@
 using System;
 using NSubstitute;
 
-public class Wrapper : Tests<Target>
+public class InternalWrapper : TestsInternal
 {
-    public Wrapper(params object[] values) : base(values)
+    public InternalWrapper(params object[] values) : base(values)
     {
     }
 
@@ -16,4 +16,6 @@ public class Wrapper : Tests<Target>
 
         return Substitute.For(types, parameters);
     }
+
+    public Target SUT => GetSUT<Target>();
 }

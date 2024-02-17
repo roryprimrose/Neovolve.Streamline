@@ -689,7 +689,7 @@ public class TestsTests
 
     private class TargetSpecificConstructorWrapper : Wrapper<MultiplePublicConstructors>
     {
-        protected override ConstructorInfo GetConstructor()
+        protected override ConstructorInfo GetConstructor<MultiplePublicConstructors>()
         {
             var constructors = typeof(MultiplePublicConstructors).GetConstructors()
                 .Where(x => x.GetParameters().Any(y => y.ParameterType == typeof(ILogger)));
