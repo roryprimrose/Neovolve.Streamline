@@ -19,7 +19,7 @@ public abstract class TestsBase : IDisposable
     , IAsyncDisposable
 #endif
 {
-    private readonly Dictionary<string, object> _services = new();
+    private readonly Dictionary<string, object?> _services = new();
     private object? _sut;
 
     /// <summary>
@@ -42,7 +42,7 @@ public abstract class TestsBase : IDisposable
         Dispose(true);
         GC.SuppressFinalize(this);
     }
-    
+
 #if NETSTANDARD2_1
     /// <inheritdoc />
     public virtual async ValueTask DisposeAsync()
@@ -61,6 +61,10 @@ public abstract class TestsBase : IDisposable
     /// <returns>
     ///     Returns the service instance for the specified type.
     /// </returns>
+    /// <exception cref="InvalidOperationException">
+    ///     The service has been explicitly stored as <c>null</c> via
+    ///     <see cref="Use{TService}()" /> and cannot be returned.
+    /// </exception>
     /// <remarks>
     ///     <para>
     ///         The typical use case for this method is to create and store a service of the requested type that will be used
@@ -86,6 +90,10 @@ public abstract class TestsBase : IDisposable
     /// <returns>
     ///     Returns the service instance for the specified type and key.
     /// </returns>
+    /// <exception cref="InvalidOperationException">
+    ///     The service has been explicitly stored as <c>null</c> via
+    ///     <see cref="Use{TService}()" /> and cannot be returned.
+    /// </exception>
     /// <remarks>
     ///     <para>
     ///         The typical use case for this method is to create and store a service of the requested type that will be used
@@ -101,7 +109,23 @@ public abstract class TestsBase : IDisposable
     {
         key = key ?? throw new ArgumentNullException(nameof(key));
 
-        return (TService)ResolveService(typeof(TService), key);
+        var service = (TService?)ResolveService(typeof(TService), key);
+
+        if (service == null)
+        {
+            if (key == string.Empty)
+            {
+                throw new InvalidOperationException(
+                    "The service has been explicitly stored as null via Use<TService>() and cannot be returned.");
+            }
+            else
+            {
+                throw new InvalidOperationException(
+                    "The service has been explicitly stored as null via Use<TService>(key) and cannot be returned.");
+            }
+        }
+
+        return service;
     }
 
     /// <summary>
@@ -113,7 +137,7 @@ public abstract class TestsBase : IDisposable
     ///     This method allows a unit test provide its own service instance rather than having one created by
     ///     <see cref="Service{TService}()" />.
     /// </remarks>
-    public TService Use<TService>() where TService : new()
+    public TService? Use<TService>() where TService : new()
     {
         var service = new TService();
 
@@ -130,7 +154,7 @@ public abstract class TestsBase : IDisposable
     ///     This method allows a unit test provide its own service instance rather than having one created by
     ///     <see cref="Service{TService}()" />.
     /// </remarks>
-    public TService Use<TService>(TService service)
+    public TService? Use<TService>(TService? service)
     {
         return Use(service, string.Empty);
     }
@@ -151,12 +175,18 @@ public abstract class TestsBase : IDisposable
     ///         The <paramref name="key" /> parameter allows a unit test to store multiple instances of a service type.
     ///     </para>
     /// </remarks>
-    public TService Use<TService>(TService service, string key)
+    public TService? Use<TService>(TService? service, string key)
     {
-        service = service ?? throw new ArgumentNullException(nameof(service));
         key = key ?? throw new ArgumentNullException(nameof(key));
 
-        StoreServiceAsAllTypes(service, key);
+        if (service == null)
+        {
+            StoreService(null, typeof(TService), key);
+        }
+        else
+        {
+            StoreServiceAsAllTypes(service, key);
+        }
 
         return service;
     }
@@ -201,7 +231,7 @@ public abstract class TestsBase : IDisposable
     /// <param name="parameterValues">The parameter values to pass to the constructor.</param>
     /// <typeparam name="T">The type of SUT to build.</typeparam>
     /// <returns>Returns an instance of the SUT.</returns>
-    protected virtual T BuildSUT<T>(ConstructorInfo constructor, object[] parameterValues) where T : class
+    protected virtual T BuildSUT<T>(ConstructorInfo constructor, object?[] parameterValues) where T : class
     {
         return (T)constructor.Invoke(parameterValues);
     }
@@ -299,7 +329,7 @@ public abstract class TestsBase : IDisposable
     /// </summary>
     /// <param name="parameter">The parameter to resolve a service instance for.</param>
     /// <returns>Returns a service instance for the specified parameter.</returns>
-    protected virtual object ResolveService(ParameterInfo parameter)
+    protected virtual object? ResolveService(ParameterInfo parameter)
     {
         return ResolveService(parameter.ParameterType, string.Empty);
     }
@@ -310,7 +340,7 @@ public abstract class TestsBase : IDisposable
     /// <param name="type">The type of the service to resolve.</param>
     /// <param name="key">The key of the service to resolve.</param>
     /// <returns>Returns a service instance for the specified type and key.</returns>
-    protected virtual object ResolveService(Type type, string key)
+    protected virtual object? ResolveService(Type type, string key)
     {
         var cacheKey = GetCacheKey(type, key);
 
@@ -361,7 +391,7 @@ public abstract class TestsBase : IDisposable
 
         return type.AssemblyQualifiedName + "|" + key;
     }
-    
+
 #if NETSTANDARD2_1
     private async Task DisposeAsyncCore()
     {
@@ -447,7 +477,7 @@ public abstract class TestsBase : IDisposable
         _sut = null;
     }
 
-    private void StoreService(object service, Type serviceType, string key = "")
+    private void StoreService(object? service, Type serviceType, string key = "")
     {
         // The reason we can't use service.GetType() is because that would be the type of the implementation
         // which will often be different than the service type requested (class vs interface for example)

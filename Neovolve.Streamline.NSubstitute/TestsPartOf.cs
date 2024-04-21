@@ -23,7 +23,7 @@ public abstract class TestsPartOf<T> : Tests<T> where T : class
     }
 
     /// <inheritdoc />
-    protected override TSUT BuildSUT<TSUT>(ConstructorInfo constructor, object[] parameterValues)
+    protected override TSUT BuildSUT<TSUT>(ConstructorInfo constructor, object?[] parameterValues)
     {
         return Substitute.ForPartsOf<TSUT>(parameterValues);
     }

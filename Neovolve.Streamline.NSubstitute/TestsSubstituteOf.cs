@@ -24,7 +24,7 @@ public abstract class TestsSubstituteOf<T> : Tests<T> where T : class
     }
 
     /// <inheritdoc />
-    protected override TSUT BuildSUT<TSUT>(ConstructorInfo constructor, object[] parameterValues)
+    protected override TSUT BuildSUT<TSUT>(ConstructorInfo constructor, object?[] parameterValues)
     {
         Type[] types = [TargetType ?? typeof(TSUT)];
 
