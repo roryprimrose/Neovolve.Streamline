@@ -1,7 +1,7 @@
 ﻿namespace Examples;
 
 using System;
-using Divergic.Logging.Xunit;
+using Neovolve.Logging.Xunit;
 using FluentAssertions;
 using Microsoft.Extensions.Logging;
 using NSubstitute;

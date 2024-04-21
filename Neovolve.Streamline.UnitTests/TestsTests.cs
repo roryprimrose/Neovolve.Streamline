@@ -5,7 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
-using Divergic.Logging.Xunit;
+using Neovolve.Logging.Xunit;
 using FluentAssertions;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
