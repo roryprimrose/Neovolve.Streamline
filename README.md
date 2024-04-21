@@ -102,6 +102,36 @@ public class SomethingTests : Tests<Something>
 }
 ```
 
+## Bring your own service
+Sometimes a unit test will have its own specific service that should not be created by the Streamline package. In this case, you can use the `Use()`, `Use(service)` or `Use(service, key)` methods to store your own service instance.
+
+```csharp
+
+public class MyFirst : IFirst
+{
+}
+
+using NSubstitute;
+
+public class SomethingTests : Tests<Something>
+{
+    [Fact]
+    public void FirstActionDoesXYZWhenABC()
+    {
+        // This will create the MyFirst service instance as both MyFirst and IFirst
+        Use<MyFirst>();
+
+        // Configure these service for their behaviours
+
+        // Act
+        SUT.FirstAction();
+
+        // Assert
+        Service<IFirst>().Received().FirstAction();
+    }
+}
+```
+
 ## Advantages
 
 This package brings several advantages.

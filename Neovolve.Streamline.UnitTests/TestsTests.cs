@@ -334,6 +334,19 @@ public class TestsTests
     }
 
     [Fact]
+    public void ServiceByKeyThrowsExceptionWhenNullServiceStored()
+    {
+        var key = Guid.NewGuid().ToString();
+        var wrapper = new Wrapper();
+
+        wrapper.Use<ILogger>(null, key);
+
+        var action = () => wrapper.Service<ILogger>(key);
+
+        action.Should().Throw<InvalidOperationException>();
+    }
+
+    [Fact]
     public void ServiceReturnsCachedInstance()
     {
         var wrapper = new Wrapper();
@@ -354,6 +367,18 @@ public class TestsTests
         var actual = wrapper.Service<ITargetService>();
 
         actual.Should().BeSameAs(expected);
+    }
+
+    [Fact]
+    public void ServiceThrowsExceptionWhenNullServiceStored()
+    {
+        var wrapper = new Wrapper();
+
+        wrapper.Use<ILogger>(null);
+
+        var action = () => wrapper.Service<ILogger>();
+
+        action.Should().Throw<InvalidOperationException>();
     }
 
     [Fact]
@@ -448,6 +473,17 @@ public class TestsTests
     }
 
     [Fact]
+    public void UseByKeyWithNullReturnsNull()
+    {
+        var key = Guid.NewGuid().ToString();
+        var wrapper = new Wrapper();
+
+        var actual = wrapper.Use<ILogger>(null, key);
+
+        actual.Should().BeNull();
+    }
+
+    [Fact]
     public void UseOverwritesExistingService()
     {
         var service = Substitute.For<ITargetService>();
@@ -528,7 +564,7 @@ public class TestsTests
 
         var wrapper = new Wrapper(service);
 
-        Action action = () => wrapper.Use<ITargetService>(null!);
+        Action action = () => wrapper.Use<ITargetService>(null, null!);
 
         action.Should().Throw<ArgumentNullException>();
     }
@@ -538,7 +574,7 @@ public class TestsTests
     {
         var sut = new Wrapper();
 
-        Action action = () => sut.Use<object>(null!);
+        Action action = () => sut.Use<object>(null, null!);
 
         action.Should().Throw<ArgumentNullException>();
     }
@@ -607,6 +643,16 @@ public class TestsTests
         var actual = wrapper.Service<ITargetService>();
 
         actual.Should().BeOfType<TargetService>();
+    }
+
+    [Fact]
+    public void UseWithNullReturnsNull()
+    {
+        var wrapper = new Wrapper();
+
+        var actual = wrapper.Use<ILogger>(null);
+
+        actual.Should().BeNull();
     }
 
     // ReSharper disable once ClassNeverInstantiated.Local
@@ -689,9 +735,9 @@ public class TestsTests
 
     private class TargetSpecificConstructorWrapper : Wrapper<MultiplePublicConstructors>
     {
-        protected override ConstructorInfo GetConstructor<MultiplePublicConstructors>()
+        protected override ConstructorInfo GetConstructor<TMultiplePublicConstructors>()
         {
-            var constructors = typeof(MultiplePublicConstructors).GetConstructors()
+            var constructors = typeof(TMultiplePublicConstructors).GetConstructors()
                 .Where(x => x.GetParameters().Any(y => y.ParameterType == typeof(ILogger)));
 
             return constructors.Single();
