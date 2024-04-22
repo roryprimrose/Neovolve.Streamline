@@ -107,7 +107,7 @@ jobs:
 
     steps:
     - name: Download packages
-      uses: actions/download-artifact@v3
+      uses: actions/download-artifact@v4
       with:
         name: packages
       
@@ -116,7 +116,7 @@ jobs:
       
       # Temporary steps while waiting for nuget client to support multiple package push
     - name: Download version
-      uses: actions/download-artifact@v3
+      uses: actions/download-artifact@v4
       with:
         name: version
 
@@ -149,12 +149,12 @@ jobs:
     steps:
     
     - name: Download packages
-      uses: actions/download-artifact@v3
+      uses: actions/download-artifact@v4
       with:
         name: packages
       
     - name: Download version
-      uses: actions/download-artifact@v3
+      uses: actions/download-artifact@v4
       with:
         name: version
 
