@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 16
-VisualStudioVersion = 16.0.30907.101
+# Visual Studio Version 17
+VisualStudioVersion = 17.9.34728.123
 MinimumVisualStudioVersion = 15.0.26124.0
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Neovolve.Streamline", "Neovolve.Streamline\Neovolve.Streamline.csproj", "{980EE2DF-8434-418A-88CA-876E99E48CC9}"
 EndProject
@@ -16,8 +16,10 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{3CC70DA2-2BA4-46D5-9667-D47A4C87ACC0}"
 	ProjectSection(SolutionItems) = preProject
 		.gitignore = .gitignore
+		Directory.Packages.props = Directory.Packages.props
 		GitVersion.yml = GitVersion.yml
 		LICENSE.md = LICENSE.md
+		NuGet.config = NuGet.config
 		README.md = README.md
 	EndProjectSection
 EndProject
@@ -35,7 +37,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Neovolve.Streamline.UnitTes
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Unit Tests", "Unit Tests", "{06FA8D87-BF6A-4AC0-818A-4D2D51EE4CA2}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Neovolve.Streamline.NSubstitute.UnitTests", "Neovolve.Streamline.NSubstitute.UnitTests\Neovolve.Streamline.NSubstitute.UnitTests.csproj", "{2DA40BE0-BD60-4733-949D-F3D9DFBA098C}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Neovolve.Streamline.NSubstitute.UnitTests", "Neovolve.Streamline.NSubstitute.UnitTests\Neovolve.Streamline.NSubstitute.UnitTests.csproj", "{2DA40BE0-BD60-4733-949D-F3D9DFBA098C}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
