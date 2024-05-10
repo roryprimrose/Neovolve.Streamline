@@ -1,13 +1,14 @@
 ﻿namespace Neovolve.Streamline.UnitTests;
 
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
-using Neovolve.Logging.Xunit;
 using FluentAssertions;
 using Microsoft.Extensions.Logging;
+using Neovolve.Logging.Xunit;
 using NSubstitute;
 using Xunit;
 using Xunit.Abstractions;
@@ -394,6 +395,30 @@ public class TestsTests
     }
 
     [Fact]
+    public async Task SUTReturnsSameInstanceOnAllThreads()
+    {
+        var maxCount = 100;
+        var tasks = new List<Task<Target>>(maxCount);
+        var wrapper = new Wrapper();
+
+        for (var index = 0; index < maxCount; index++)
+        {
+            var task = GetSUT(wrapper);
+
+            tasks.Add(task);
+        }
+
+        var results = await Task.WhenAll(tasks);
+
+        var first = results[0];
+
+        foreach (var result in results)
+        {
+            result.Should().BeSameAs(first);
+        }
+    }
+
+    [Fact]
     public void SUTThrowsExceptionWhenMultipleInternalConstructorsFound()
     {
         var wrapper = new Wrapper<MultipleInternalConstructors>();
@@ -653,6 +678,13 @@ public class TestsTests
         var actual = wrapper.Use<ILogger>(null);
 
         actual.Should().BeNull();
+    }
+
+    private async Task<Target> GetSUT(Wrapper wrapper)
+    {
+        await Task.Delay(10);
+
+        return wrapper.SUT;
     }
 
     // ReSharper disable once ClassNeverInstantiated.Local
