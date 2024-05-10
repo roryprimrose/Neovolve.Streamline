@@ -169,7 +169,7 @@ jobs:
       run: Add-Content -Path ${env:GITHUB_ENV} "`nprojectName=$(${env:GITHUB_REPOSITORY}.substring(${env:GITHUB_REPOSITORY}.IndexOf('/') + 1))" -Encoding utf8
       
     - name: Setup nuget
-      uses: nuget/setup-nuget@v1
+      uses: nuget/setup-nuget@v2
       
       # Temporary steps while waiting for nuget client to support multiple package push
 #    - name: Publish to GitHub
