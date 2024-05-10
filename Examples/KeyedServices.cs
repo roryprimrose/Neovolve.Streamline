@@ -43,7 +43,7 @@ public class KeyedServicesTests : Tests<KeyedServices>
         actual.Should().Be(18);
     }
 
-    protected override object ResolveService(ParameterInfo parameter)
+    protected override object? ResolveService(ParameterInfo parameter)
     {
         if (parameter.ParameterType != typeof(IDuplicateService))
         {

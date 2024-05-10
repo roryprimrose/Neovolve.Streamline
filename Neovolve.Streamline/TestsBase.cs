@@ -20,6 +20,7 @@ public abstract class TestsBase : IDisposable
 #endif
 {
     private readonly Dictionary<string, object?> _services = new();
+    private readonly object _syncLock = new();
     private object? _sut;
 
     /// <summary>
@@ -118,11 +119,9 @@ public abstract class TestsBase : IDisposable
                 throw new InvalidOperationException(
                     "The service has been explicitly stored as null via Use<TService>() and cannot be returned.");
             }
-            else
-            {
-                throw new InvalidOperationException(
-                    "The service has been explicitly stored as null via Use<TService>(key) and cannot be returned.");
-            }
+
+            throw new InvalidOperationException(
+                "The service has been explicitly stored as null via Use<TService>(key) and cannot be returned.");
         }
 
         return service;
@@ -305,23 +304,26 @@ public abstract class TestsBase : IDisposable
     /// </remarks>
     protected T GetSUT<T>() where T : class
     {
-        if (_sut is T sut)
+        lock (_syncLock)
         {
+            if (_sut is T sut)
+            {
+                return sut;
+            }
+
+            if (_sut != null)
+            {
+                // The caller has requested a different type
+                // Destroy the previous SUT first
+                DisposeSUT();
+            }
+
+            // The SUT instance either does not exist or the caller is TestsInternal where a different SUT type is requested
+            // In this case we will create a new SUT instance
+            _sut = sut = BuildSUT<T>();
+
             return sut;
         }
-
-        if (_sut != null)
-        {
-            // The caller has requested a different type
-            // Destroy the previous SUT first
-            DisposeSUT();
-        }
-
-        // The SUT instance either does not exist or the caller is TestsInternal where a different SUT type is requested
-        // In this case we will create a new SUT instance
-        _sut = sut = BuildSUT<T>();
-
-        return sut;
     }
 
     /// <summary>
