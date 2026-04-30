@@ -112,10 +112,11 @@ jobs:
       with:
         name: packages
       
-    - name: Setup nuget
-      uses: nuget/setup-nuget@v4.0
-      
-      # Temporary steps while waiting for nuget client to support multiple package push
+    - name: Setup dotnet v10.0
+      uses: actions/setup-dotnet@v5.2.0
+      with:
+        dotnet-version: '10.x' # SDK Version to use.
+
     - name: Download version
       uses: actions/download-artifact@v8.0.1
       with:
@@ -131,17 +132,10 @@ jobs:
       env: 
         MYGET_APIKEY: ${{ secrets.MYGET_APIKEY }}
       run: |
-        nuget push Neovolve.Streamline.${{ env.NuGetVersionV2 }}.symbols.nupkg $MYGET_APIKEY -source https://www.myget.org/F/neovolve/api/v2/package
-        nuget push Neovolve.Streamline.NSubstitute.${{ env.NuGetVersionV2 }}.symbols.nupkg $MYGET_APIKEY -source https://www.myget.org/F/neovolve/api/v2/package
+        dotnet nuget push Neovolve.Streamline.${{ env.NuGetVersionV2 }}.symbols.nupkg --api-key "$MYGET_APIKEY" --source https://www.myget.org/F/neovolve/api/v2/package --no-service-endpoint
+        dotnet nuget push Neovolve.Streamline.NSubstitute.${{ env.NuGetVersionV2 }}.symbols.nupkg --api-key "$MYGET_APIKEY" --source https://www.myget.org/F/neovolve/api/v2/package --no-service-endpoint
       continue-on-error: true # just in case MyGet is down
-      
-        # End temporary steps
 
-#    - name: Publish to MyGet.org
-#      env: 
-#        MYGET_APIKEY: ${{ secrets.MYGET_APIKEY }}
-#      run: nuget push *.*.symbols.nupkg $MYGET_APIKEY -source https://www.myget.org/F/neovolve/api/v2/package
-      
   release:
     needs: build
     runs-on: ubuntu-latest
@@ -169,10 +163,11 @@ jobs:
       shell: pwsh
       run: Add-Content -Path ${env:GITHUB_ENV} "`nprojectName=$(${env:GITHUB_REPOSITORY}.substring(${env:GITHUB_REPOSITORY}.IndexOf('/') + 1))" -Encoding utf8
       
-    - name: Setup nuget
-      uses: nuget/setup-nuget@v4.0
-      
-      # Temporary steps while waiting for nuget client to support multiple package push
+    - name: Setup dotnet v10.0
+      uses: actions/setup-dotnet@v5.2.0
+      with:
+        dotnet-version: '10.x' # SDK Version to use.
+
 #    - name: Publish to GitHub
 #      env: 
 #        GPR_APIKEY: ${{ secrets.GPR_APIKEY }}
@@ -184,11 +179,8 @@ jobs:
       env: 
         NUGET_APIKEY: ${{ secrets.NUGET_APIKEY }}
       run: |
-        nuget push Neovolve.Streamline.${{ env.NuGetVersionV2 }}.symbols.nupkg $NUGET_APIKEY -source https://api.nuget.org/v3/index.json
-        nuget push Neovolve.Streamline.NSubstitute.${{ env.NuGetVersionV2 }}.symbols.nupkg $NUGET_APIKEY -source https://api.nuget.org/v3/index.json
-      
-        # End temporary steps
-
+        dotnet nuget push Neovolve.Streamline.${{ env.NuGetVersionV2 }}.symbols.nupkg --api-key "$NUGET_APIKEY" --source https://api.nuget.org/v3/index.json
+        dotnet nuget push Neovolve.Streamline.NSubstitute.${{ env.NuGetVersionV2 }}.symbols.nupkg --api-key "$NUGET_APIKEY" --source https://api.nuget.org/v3/index.json
 #    - name: Publish to GitHub
 #      env: 
 #        GPR_APIKEY: ${{ secrets.GPR_APIKEY }}
