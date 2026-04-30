@@ -14,39 +14,38 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
 
     steps:
 
     - name: Checkout
-      uses: actions/checkout@v4
+      uses: actions/checkout@v6.0.2
       with:
         fetch-depth: 0
 
     - name: Install GitVersion
-      uses: gittools/actions/gitversion/setup@v0.10.2
+      uses: gittools/actions/gitversion/setup@v4.5.0
       with:
-          versionSpec: '5.x'
+        versionSpec: '6.x'
     
     - name: Use GitVersion
       id: gitversion # step id used as reference for output values
-      uses: gittools/actions/gitversion/execute@v0.10.2
+      uses: gittools/actions/gitversion/execute@v4.5.0
       with:
-        useConfigFile: true
         configFilePath: ./GitVersion.yml
 
     - name: Update project version
       uses: roryprimrose/set-vs-sdk-project-version@v1.0.6
       with:
-        version: ${{ steps.gitversion.outputs.NuGetVersionV2 }}
-        assemblyVersion: ${{ steps.gitversion.outputs.AssemblySemVer }}
-        fileVersion: ${{ steps.gitversion.outputs.MajorMinorPatch }}
-        informationalVersion: ${{ steps.gitversion.outputs.InformationalVersion }}  
+        version: ${{ steps.gitversion.outputs.semVer }}
+        assemblyVersion: ${{ steps.gitversion.outputs.assemblySemVer }}
+        fileVersion: ${{ steps.gitversion.outputs.majorMinorPatch }}
+        informationalVersion: ${{ steps.gitversion.outputs.informationalVersion }}  
         
-    - name: Setup dotnet v8.0
-      uses: actions/setup-dotnet@v4
+    - name: Setup dotnet v10.0
+      uses: actions/setup-dotnet@v5.2.0
       with:
-        dotnet-version: '8.x' # SDK Version to use.
+        dotnet-version: '10.x' # SDK Version to use.
 
     - name: Restore
       run: dotnet restore
@@ -59,7 +58,7 @@ jobs:
 
     - name: Generate coverage report
       # run: reportgenerator -reports:**/coverage.cobertura.xml -targetdir:Report -reporttypes:HtmlInline_AzurePipelines;Cobertura
-      uses: danielpalme/ReportGenerator-GitHub-Action@5.2.5
+      uses: danielpalme/ReportGenerator-GitHub-Action@5.5.7
       with:
         reports: "**/coverage*cobertura.xml"
         targetdir: "Report"
@@ -68,7 +67,7 @@ jobs:
       if: github.event_name == 'pull_request' && github.repository_owner == 'roryprimrose'       # Don't run on forks
 
     - name: Publish coverage report
-      uses: 5monkeys/cobertura-action@master
+      uses: 5monkeys/cobertura-action@v14
       with:
         path: Report/Cobertura.xml
         repo_token: ${{ secrets.GITHUB_TOKEN }}
@@ -80,22 +79,24 @@ jobs:
       run: Add-Content -Path ${env:GITHUB_ENV} "`nprojectName=$(${env:GITHUB_REPOSITORY}.substring(${env:GITHUB_REPOSITORY}.IndexOf('/') + 1))" -Encoding utf8
       
     - name: Pack
+      shell: pwsh
       run: |
-        dotnet pack "./${{ env.projectName }}/${{ env.projectName }}.csproj" -c Release --no-build --include-symbols -o $GITHUB_WORKSPACE/staging
-        dotnet pack "./${{ env.projectName }}.NSubstitute/${{ env.projectName }}.NSubstitute.csproj" -c Release --no-build --include-symbols -o $GITHUB_WORKSPACE/staging
+        $staging = Join-Path $env:GITHUB_WORKSPACE "staging"
+        dotnet pack ".\${{ env.projectName }}\${{ env.projectName }}.csproj" -c Release --no-build --include-symbols -o $staging
+        dotnet pack ".\${{ env.projectName }}.NSubstitute\${{ env.projectName }}.NSubstitute.csproj" -c Release --no-build --include-symbols -o $staging
 
     - name: Publish build artifacts
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7.0.1
       with:
         name: packages
         path: staging
     
-    - shell: bash
-      name: Write version
+    - name: Write version
+      shell: pwsh
       run: |
-        echo '${{ steps.gitversion.outputs.NuGetVersionV2 }}' > version.txt
+        Set-Content -Path version.txt -Value '${{ steps.gitversion.outputs.semVer }}' -Encoding utf8
     - name: Upload version
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7.0.1
       with:
         name: version
         path: version.txt
@@ -107,16 +108,17 @@ jobs:
 
     steps:
     - name: Download packages
-      uses: actions/download-artifact@v4
+      uses: actions/download-artifact@v8.0.1
       with:
         name: packages
       
-    - name: Setup nuget
-      uses: nuget/setup-nuget@v2
-      
-      # Temporary steps while waiting for nuget client to support multiple package push
+    - name: Setup dotnet v10.0
+      uses: actions/setup-dotnet@v5.2.0
+      with:
+        dotnet-version: '10.x' # SDK Version to use.
+
     - name: Download version
-      uses: actions/download-artifact@v4
+      uses: actions/download-artifact@v8.0.1
       with:
         name: version
 
@@ -129,18 +131,19 @@ jobs:
     - name: Publish to MyGet.org
       env: 
         MYGET_APIKEY: ${{ secrets.MYGET_APIKEY }}
+      shell: pwsh
       run: |
-        nuget push Neovolve.Streamline.${{ env.NuGetVersionV2 }}.symbols.nupkg $MYGET_APIKEY -source https://www.myget.org/F/neovolve/api/v2/package
-        nuget push Neovolve.Streamline.NSubstitute.${{ env.NuGetVersionV2 }}.symbols.nupkg $MYGET_APIKEY -source https://www.myget.org/F/neovolve/api/v2/package
-      continue-on-error: true # just in case MyGet is down
-      
-        # End temporary steps
+        $packages = Get-ChildItem -Path . -Filter *.symbols.nupkg
 
-#    - name: Publish to MyGet.org
-#      env: 
-#        MYGET_APIKEY: ${{ secrets.MYGET_APIKEY }}
-#      run: nuget push *.*.symbols.nupkg $MYGET_APIKEY -source https://www.myget.org/F/neovolve/api/v2/package
-      
+        if ($packages.Count -eq 0) {
+          throw "No symbol packages were found to publish."
+        }
+
+        $packages | ForEach-Object {
+          dotnet nuget push $_.FullName --api-key $env:MYGET_APIKEY --source https://www.myget.org/F/neovolve/api/v2/package --no-service-endpoint
+        }
+      continue-on-error: true # just in case MyGet is down
+
   release:
     needs: build
     runs-on: ubuntu-latest
@@ -149,12 +152,12 @@ jobs:
     steps:
     
     - name: Download packages
-      uses: actions/download-artifact@v4
+      uses: actions/download-artifact@v8.0.1
       with:
         name: packages
       
     - name: Download version
-      uses: actions/download-artifact@v4
+      uses: actions/download-artifact@v8.0.1
       with:
         name: version
 
@@ -168,10 +171,11 @@ jobs:
       shell: pwsh
       run: Add-Content -Path ${env:GITHUB_ENV} "`nprojectName=$(${env:GITHUB_REPOSITORY}.substring(${env:GITHUB_REPOSITORY}.IndexOf('/') + 1))" -Encoding utf8
       
-    - name: Setup nuget
-      uses: nuget/setup-nuget@v1
-      
-      # Temporary steps while waiting for nuget client to support multiple package push
+    - name: Setup dotnet v10.0
+      uses: actions/setup-dotnet@v5.2.0
+      with:
+        dotnet-version: '10.x' # SDK Version to use.
+
 #    - name: Publish to GitHub
 #      env: 
 #        GPR_APIKEY: ${{ secrets.GPR_APIKEY }}
@@ -182,12 +186,17 @@ jobs:
     - name: Publish to NuGet.org
       env: 
         NUGET_APIKEY: ${{ secrets.NUGET_APIKEY }}
+      shell: pwsh
       run: |
-        nuget push Neovolve.Streamline.${{ env.NuGetVersionV2 }}.symbols.nupkg $NUGET_APIKEY -source https://api.nuget.org/v3/index.json
-        nuget push Neovolve.Streamline.NSubstitute.${{ env.NuGetVersionV2 }}.symbols.nupkg $NUGET_APIKEY -source https://api.nuget.org/v3/index.json
-      
-        # End temporary steps
+        $packages = Get-ChildItem -Path . -Filter *.symbols.nupkg
 
+        if ($packages.Count -eq 0) {
+          throw "No symbol packages were found to publish."
+        }
+
+        $packages | ForEach-Object {
+          dotnet nuget push $_.FullName --api-key $env:NUGET_APIKEY --source https://api.nuget.org/v3/index.json
+        }
 #    - name: Publish to GitHub
 #      env: 
 #        GPR_APIKEY: ${{ secrets.GPR_APIKEY }}
@@ -208,6 +217,29 @@ jobs:
         release_name: Release ${{ env.NuGetVersionV2 }}
         draft: false
         prerelease: ${{ contains(env.NuGetVersionV2, 'beta') }}
+
+    - name: Resolve release assets
+      shell: pwsh
+      run: |
+        $package = Get-ChildItem -Path . -Filter "${{ env.projectName }}.*.nupkg" |
+          Where-Object { $_.Name -notlike "*.symbols.nupkg" -and $_.Name -notlike "${{ env.projectName }}.NSubstitute.*" } |
+          Select-Object -First 1
+        $symbolPackage = Get-ChildItem -Path . -Filter "${{ env.projectName }}.*.symbols.nupkg" |
+          Where-Object { $_.Name -notlike "${{ env.projectName }}.NSubstitute.*" } |
+          Select-Object -First 1
+
+        if ($package -eq $null) {
+          throw "The release package could not be found."
+        }
+
+        if ($symbolPackage -eq $null) {
+          throw "The release symbol package could not be found."
+        }
+
+        Add-Content -Path $env:GITHUB_ENV -Value "packagePath=$($package.FullName)" -Encoding utf8
+        Add-Content -Path $env:GITHUB_ENV -Value "packageName=$($package.Name)" -Encoding utf8
+        Add-Content -Path $env:GITHUB_ENV -Value "symbolPackagePath=$($symbolPackage.FullName)" -Encoding utf8
+        Add-Content -Path $env:GITHUB_ENV -Value "symbolPackageName=$($symbolPackage.Name)" -Encoding utf8
     
     - name: Upload release asset for package
       id: upload-release-asset-package
@@ -216,8 +248,8 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: ${{ env.projectName }}.${{ env.NuGetVersionV2 }}.nupkg
-        asset_name: ${{ env.projectName }}.${{ env.NuGetVersionV2 }}.nupkg
+        asset_path: ${{ env.packagePath }}
+        asset_name: ${{ env.packageName }}
         asset_content_type: application/zip
     
     - name: Upload release asset for symbol package
@@ -227,6 +259,6 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: ${{ env.projectName }}.${{ env.NuGetVersionV2 }}.symbols.nupkg
-        asset_name: ${{ env.projectName }}.${{ env.NuGetVersionV2 }}.symbols.nupkg
+        asset_path: ${{ env.symbolPackagePath }}
+        asset_name: ${{ env.symbolPackageName }}
         asset_content_type: application/zip

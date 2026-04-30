@@ -11,7 +11,7 @@ public class TargetService : ITargetService
 
     public ValueTask DisposeAsync()
     {
-        return ValueTask.CompletedTask;
+        return default;
     }
 
     public string GetValue(Guid id)

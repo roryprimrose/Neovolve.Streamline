@@ -14,10 +14,7 @@ using System.Threading.Tasks;
 ///     This class provides a set of helper methods for creating and managing the SUT instance, as well as any dependencies
 ///     that it may have.
 /// </remarks>
-public abstract class TestsBase : IDisposable
-#if NETSTANDARD2_1
-    , IAsyncDisposable
-#endif
+public abstract class TestsBase : IDisposable, IAsyncDisposable
 {
     private readonly Dictionary<string, object?> _services = new();
     private readonly object _syncLock = new();
@@ -44,7 +41,6 @@ public abstract class TestsBase : IDisposable
         GC.SuppressFinalize(this);
     }
 
-#if NETSTANDARD2_1
     /// <inheritdoc />
     public virtual async ValueTask DisposeAsync()
     {
@@ -53,7 +49,6 @@ public abstract class TestsBase : IDisposable
         Dispose(disposing: false);
         GC.SuppressFinalize(this);
     }
-#endif
 
     /// <summary>
     ///     Returns the service instance for the specified type.
@@ -394,7 +389,6 @@ public abstract class TestsBase : IDisposable
         return type.AssemblyQualifiedName + "|" + key;
     }
 
-#if NETSTANDARD2_1
     private async Task DisposeAsyncCore()
     {
         if (_sut is IAsyncDisposable sut)
@@ -431,7 +425,6 @@ public abstract class TestsBase : IDisposable
             }
         }
     }
-#endif
 
     private void DisposeServices()
     {
