@@ -131,9 +131,17 @@ jobs:
     - name: Publish to MyGet.org
       env: 
         MYGET_APIKEY: ${{ secrets.MYGET_APIKEY }}
+      shell: pwsh
       run: |
-        dotnet nuget push Neovolve.Streamline.${{ env.NuGetVersionV2 }}.symbols.nupkg --api-key "$MYGET_APIKEY" --source https://www.myget.org/F/neovolve/api/v2/package --no-service-endpoint
-        dotnet nuget push Neovolve.Streamline.NSubstitute.${{ env.NuGetVersionV2 }}.symbols.nupkg --api-key "$MYGET_APIKEY" --source https://www.myget.org/F/neovolve/api/v2/package --no-service-endpoint
+        $packages = Get-ChildItem -Path . -Filter *.symbols.nupkg
+
+        if ($packages.Count -eq 0) {
+          throw "No symbol packages were found to publish."
+        }
+
+        $packages | ForEach-Object {
+          dotnet nuget push $_.FullName --api-key $env:MYGET_APIKEY --source https://www.myget.org/F/neovolve/api/v2/package --no-service-endpoint
+        }
       continue-on-error: true # just in case MyGet is down
 
   release:
@@ -178,9 +186,17 @@ jobs:
     - name: Publish to NuGet.org
       env: 
         NUGET_APIKEY: ${{ secrets.NUGET_APIKEY }}
+      shell: pwsh
       run: |
-        dotnet nuget push Neovolve.Streamline.${{ env.NuGetVersionV2 }}.symbols.nupkg --api-key "$NUGET_APIKEY" --source https://api.nuget.org/v3/index.json
-        dotnet nuget push Neovolve.Streamline.NSubstitute.${{ env.NuGetVersionV2 }}.symbols.nupkg --api-key "$NUGET_APIKEY" --source https://api.nuget.org/v3/index.json
+        $packages = Get-ChildItem -Path . -Filter *.symbols.nupkg
+
+        if ($packages.Count -eq 0) {
+          throw "No symbol packages were found to publish."
+        }
+
+        $packages | ForEach-Object {
+          dotnet nuget push $_.FullName --api-key $env:NUGET_APIKEY --source https://api.nuget.org/v3/index.json
+        }
 #    - name: Publish to GitHub
 #      env: 
 #        GPR_APIKEY: ${{ secrets.GPR_APIKEY }}
@@ -201,6 +217,29 @@ jobs:
         release_name: Release ${{ env.NuGetVersionV2 }}
         draft: false
         prerelease: ${{ contains(env.NuGetVersionV2, 'beta') }}
+
+    - name: Resolve release assets
+      shell: pwsh
+      run: |
+        $package = Get-ChildItem -Path . -Filter "${{ env.projectName }}.*.nupkg" |
+          Where-Object { $_.Name -notlike "*.symbols.nupkg" -and $_.Name -notlike "${{ env.projectName }}.NSubstitute.*" } |
+          Select-Object -First 1
+        $symbolPackage = Get-ChildItem -Path . -Filter "${{ env.projectName }}.*.symbols.nupkg" |
+          Where-Object { $_.Name -notlike "${{ env.projectName }}.NSubstitute.*" } |
+          Select-Object -First 1
+
+        if ($package -eq $null) {
+          throw "The release package could not be found."
+        }
+
+        if ($symbolPackage -eq $null) {
+          throw "The release symbol package could not be found."
+        }
+
+        Add-Content -Path $env:GITHUB_ENV -Value "packagePath=$($package.FullName)" -Encoding utf8
+        Add-Content -Path $env:GITHUB_ENV -Value "packageName=$($package.Name)" -Encoding utf8
+        Add-Content -Path $env:GITHUB_ENV -Value "symbolPackagePath=$($symbolPackage.FullName)" -Encoding utf8
+        Add-Content -Path $env:GITHUB_ENV -Value "symbolPackageName=$($symbolPackage.Name)" -Encoding utf8
     
     - name: Upload release asset for package
       id: upload-release-asset-package
@@ -209,8 +248,8 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: ${{ env.projectName }}.${{ env.NuGetVersionV2 }}.nupkg
-        asset_name: ${{ env.projectName }}.${{ env.NuGetVersionV2 }}.nupkg
+        asset_path: ${{ env.packagePath }}
+        asset_name: ${{ env.packageName }}
         asset_content_type: application/zip
     
     - name: Upload release asset for symbol package
@@ -220,6 +259,6 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: ${{ env.projectName }}.${{ env.NuGetVersionV2 }}.symbols.nupkg
-        asset_name: ${{ env.projectName }}.${{ env.NuGetVersionV2 }}.symbols.nupkg
+        asset_path: ${{ env.symbolPackagePath }}
+        asset_name: ${{ env.symbolPackageName }}
         asset_content_type: application/zip
