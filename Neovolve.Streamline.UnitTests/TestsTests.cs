@@ -173,10 +173,10 @@ public class TestsTests
         var id = Guid.NewGuid();
         var expected = Guid.NewGuid().ToString();
 
-        using var stream = Substitute.ForPartsOf<MemoryStream>();
+        var secondaryService = Substitute.For<ISecondaryAsyncDisposable>();
         var wrapper = new Wrapper();
 
-        wrapper.Use(stream);
+        wrapper.Use(secondaryService);
 
         var service = wrapper.Service<ITargetService>();
 
@@ -190,7 +190,7 @@ public class TestsTests
 
         await action.Should().NotThrowAsync();
         await service.Received().DisposeAsync();
-        await stream.Received().DisposeAsync();
+        await secondaryService.Received().DisposeAsync();
     }
 
     [Fact]
@@ -685,6 +685,10 @@ public class TestsTests
         await Task.Delay(10);
 
         return wrapper.SUT;
+    }
+
+    public interface ISecondaryAsyncDisposable : IAsyncDisposable
+    {
     }
 
     // ReSharper disable once ClassNeverInstantiated.Local
