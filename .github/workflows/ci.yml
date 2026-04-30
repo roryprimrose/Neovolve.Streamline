@@ -43,10 +43,10 @@ jobs:
         fileVersion: ${{ steps.gitversion.outputs.MajorMinorPatch }}
         informationalVersion: ${{ steps.gitversion.outputs.InformationalVersion }}  
         
-    - name: Setup dotnet v8.0
+    - name: Setup dotnet v10.0
       uses: actions/setup-dotnet@v4
       with:
-        dotnet-version: '8.x' # SDK Version to use.
+        dotnet-version: '10.x' # SDK Version to use.
 
     - name: Restore
       run: dotnet restore
