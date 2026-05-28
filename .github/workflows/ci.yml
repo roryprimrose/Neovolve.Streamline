@@ -43,7 +43,7 @@ jobs:
         informationalVersion: ${{ steps.gitversion.outputs.informationalVersion }}  
         
     - name: Setup dotnet v10.0
-      uses: actions/setup-dotnet@v5.2.0
+      uses: actions/setup-dotnet@v5.3.0
       with:
         dotnet-version: '10.x' # SDK Version to use.
 
@@ -113,7 +113,7 @@ jobs:
         name: packages
       
     - name: Setup dotnet v10.0
-      uses: actions/setup-dotnet@v5.2.0
+      uses: actions/setup-dotnet@v5.3.0
       with:
         dotnet-version: '10.x' # SDK Version to use.
 
@@ -172,7 +172,7 @@ jobs:
       run: Add-Content -Path ${env:GITHUB_ENV} "`nprojectName=$(${env:GITHUB_REPOSITORY}.substring(${env:GITHUB_REPOSITORY}.IndexOf('/') + 1))" -Encoding utf8
       
     - name: Setup dotnet v10.0
-      uses: actions/setup-dotnet@v5.2.0
+      uses: actions/setup-dotnet@v5.3.0
       with:
         dotnet-version: '10.x' # SDK Version to use.
 
