@@ -1,0 +1,31 @@
+<Solution>
+  <Configurations>
+    <Platform Name="Any CPU" />
+    <Platform Name="x64" />
+    <Platform Name="x86" />
+  </Configurations>
+  <Folder Name="/.github/">
+    <File Path=".github/dependabot.yml" />
+  </Folder>
+  <Folder Name="/.github/workflows/">
+    <File Path=".github/workflows/ci.yml" />
+  </Folder>
+  <Folder Name="/Examples/">
+    <Project Path="Examples.External/Examples.External.csproj" />
+    <Project Path="Examples/Examples.csproj" />
+  </Folder>
+  <Folder Name="/Solution Items/">
+    <File Path=".gitignore" />
+    <File Path="Directory.Packages.props" />
+    <File Path="GitVersion.yml" />
+    <File Path="LICENSE.md" />
+    <File Path="NuGet.config" />
+    <File Path="README.md" />
+  </Folder>
+  <Folder Name="/Unit Tests/">
+    <Project Path="Neovolve.Streamline.NSubstitute.UnitTests/Neovolve.Streamline.NSubstitute.UnitTests.csproj" />
+    <Project Path="Neovolve.Streamline.UnitTests/Neovolve.Streamline.UnitTests.csproj" />
+  </Folder>
+  <Project Path="Neovolve.Streamline.NSubstitute/Neovolve.Streamline.NSubstitute.csproj" />
+  <Project Path="Neovolve.Streamline/Neovolve.Streamline.csproj" />
+</Solution>
