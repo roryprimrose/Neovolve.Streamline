@@ -6,7 +6,6 @@ using Microsoft.Extensions.Logging;
 using Neovolve.Logging.Xunit;
 using NSubstitute;
 using Xunit;
-using Xunit.Abstractions;
 
 public class TestClassConstructorParameters
 {
