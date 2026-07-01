@@ -1,5 +1,7 @@
 ﻿namespace Neovolve.Streamline;
 
+using System;
+
 /// <summary>
 ///     The <see cref="Tests{T}" /> class is used to define a base class for unit tests that configures a single system
 ///     under test (SUT) instance.
@@ -27,4 +29,10 @@ public abstract class Tests<T> : TestsBase where T : class
     ///     using the <see cref="TestsBase.Service{TService}()" /> or <see cref="TestsBase.Use{TService}()" /> methods.
     /// </remarks>
     public T SUT => GetSUT<T>();
+
+    /// <inheritdoc />
+    protected override bool IsSystemUnderTestType(Type type)
+    {
+        return type == typeof(T);
+    }
 }
