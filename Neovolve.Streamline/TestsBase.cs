@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
+using Microsoft.Extensions.DependencyInjection;
 
 /// <summary>
 ///     The <see cref="TestsBase" /> class is used to define a base class for unit tests that configures a single system
@@ -19,6 +20,13 @@ public abstract class TestsBase : IDisposable, IAsyncDisposable
     private readonly Dictionary<string, object?> _services = new();
     private readonly object _syncLock = new();
     private object? _sut;
+    private IServiceProvider? _importedProvider;
+    private IServiceScope? _importedScope;
+    private bool _externalWins;
+    private IServiceCollection? _pendingServices;
+    private ServiceProvider? _ownedProvider;
+    private IServiceScope? _ownedScope;
+    private ServiceProviderBridge? _serviceProvider;
 
     /// <summary>
     ///     Initializes a new instance of the <see cref="Tests{T}" /> class.
@@ -245,6 +253,9 @@ public abstract class TestsBase : IDisposable, IAsyncDisposable
 
             // Dispose all the services and clear them out
             DisposeServices();
+
+            DisposeImported();
+            DisposeOwned();
         }
     }
 
@@ -339,11 +350,37 @@ public abstract class TestsBase : IDisposable, IAsyncDisposable
     /// <returns>Returns a service instance for the specified type and key.</returns>
     protected virtual object? ResolveService(Type type, string key)
     {
+        if (IsSystemUnderTestType(type))
+        {
+            throw new InvalidOperationException(
+                $"The type {type.FullName} is the system under test and cannot be resolved as a service. Use the SUT property or GetSUT<T>() to access it instead.");
+        }
+
         var cacheKey = GetCacheKey(type, key);
 
-        if (_services.TryGetValue(cacheKey, out var existingService))
+        if (_externalWins == false
+            && _services.TryGetValue(cacheKey, out var storedService))
         {
-            return existingService;
+            return storedService;
+        }
+
+        var externalService = ResolveExternalService(type, key);
+
+        if (externalService != null)
+        {
+            return externalService;
+        }
+
+        // No external service resolved, so return any stored service. The external-wins preference only
+        // matters when an external service also exists, which is not the case here.
+        if (_services.TryGetValue(cacheKey, out var overriddenService))
+        {
+            return overriddenService;
+        }
+
+        if (IsServiceProviderType(type))
+        {
+            return GetServiceProvider();
         }
 
         var service = BuildService(type, key);
@@ -424,6 +461,9 @@ public abstract class TestsBase : IDisposable, IAsyncDisposable
                 _services.Remove(key);
             }
         }
+
+        DisposeImported();
+        DisposeOwned();
     }
 
     private void DisposeServices()
@@ -503,4 +543,234 @@ public abstract class TestsBase : IDisposable, IAsyncDisposable
     ///     type.
     /// </remarks>
     protected virtual Type? TargetType => _sut?.GetType();
+
+    /// <summary>
+    ///     Gets an <see cref="IServiceProvider" /> that exposes the services registered via
+    ///     <see cref="Service{TService}()" />, <see cref="Use{TService}(TService)" />, <see cref="ConfigureServices" /> and
+    ///     <see cref="ImportServices" />.
+    /// </summary>
+    /// <remarks>
+    ///     Resolving a service through this provider uses the same resolution as <see cref="Service{TService}()" />, so code
+    ///     under test that resolves through dependency injection sees the same instances the test registered. The system
+    ///     under test itself is not resolvable through this provider.
+    /// </remarks>
+    protected IServiceProvider ServiceProvider => GetServiceProvider();
+
+    /// <summary>
+    ///     Registers services that participate in resolution when the system under test is built.
+    /// </summary>
+    /// <param name="configure">A delegate that adds registrations to an <see cref="IServiceCollection" />.</param>
+    /// <exception cref="ArgumentNullException">The <paramref name="configure" /> value is <c>null</c>.</exception>
+    /// <remarks>
+    ///     Services registered here are used to resolve dependencies that have not been explicitly provided via
+    ///     <see cref="Service{TService}()" /> or <see cref="Use{TService}(TService)" />. The collection is built and owned by
+    ///     this class and disposed when the test completes.
+    /// </remarks>
+    public void ConfigureServices(Action<IServiceCollection> configure)
+    {
+        configure = configure ?? throw new ArgumentNullException(nameof(configure));
+
+        _pendingServices ??= new ServiceCollection();
+
+        configure(_pendingServices);
+
+        DisposeOwned();
+
+        // The set of resolvable services has changed. Tear down the SUT so it can be rebuilt.
+        DisposeSUT();
+    }
+
+    /// <summary>
+    ///     Imports an existing <see cref="IServiceProvider" /> whose services participate in resolution when the system
+    ///     under test is built.
+    /// </summary>
+    /// <param name="provider">The provider whose services are used to resolve dependencies.</param>
+    /// <param name="externalWins">
+    ///     <c>true</c> to prefer the imported provider over services registered via <see cref="Service{TService}()" /> or
+    ///     <see cref="Use{TService}(TService)" />; otherwise <c>false</c> to prefer the registered services.
+    /// </param>
+    /// <exception cref="ArgumentNullException">The <paramref name="provider" /> value is <c>null</c>.</exception>
+    /// <remarks>
+    ///     The imported provider is not disposed by this class. Services are resolved through a scope created from the
+    ///     provider for the lifetime of the test.
+    /// </remarks>
+    public void ImportServices(IServiceProvider provider, bool externalWins = false)
+    {
+        provider = provider ?? throw new ArgumentNullException(nameof(provider));
+
+        DisposeImported();
+
+        _importedProvider = provider;
+        _externalWins = externalWins;
+
+        var scopeFactory = provider.GetService(typeof(IServiceScopeFactory)) as IServiceScopeFactory;
+
+        if (scopeFactory != null)
+        {
+            _importedScope = scopeFactory.CreateScope();
+        }
+
+        // The set of resolvable services has changed. Tear down the SUT so it can be rebuilt.
+        DisposeSUT();
+    }
+
+    /// <summary>
+    ///     Determines whether the specified type is the system under test and therefore must not be resolved as a service.
+    /// </summary>
+    /// <param name="type">The type to test.</param>
+    /// <returns><c>true</c> if the type is the system under test; otherwise <c>false</c>.</returns>
+    /// <remarks>
+    ///     Returns <c>false</c> by default. Derived classes that know the system under test type override this so that
+    ///     resolving that type throws, directing callers to the SUT property or <see cref="GetSUT{T}" /> instead.
+    /// </remarks>
+    protected virtual bool IsSystemUnderTestType(Type type)
+    {
+        return false;
+    }
+
+    private static bool IsServiceProviderType(Type type)
+    {
+        return type == typeof(IServiceProvider)
+               || type == typeof(IServiceScopeFactory)
+               || type == typeof(IServiceScope)
+               || type == typeof(IKeyedServiceProvider)
+               || type == typeof(ISupportRequiredService);
+    }
+
+    private ServiceProviderBridge GetServiceProvider()
+    {
+        return _serviceProvider ??= new ServiceProviderBridge(this);
+    }
+
+    private IServiceProvider? EnsureOwnedProvider()
+    {
+        if (_ownedScope != null)
+        {
+            return _ownedScope.ServiceProvider;
+        }
+
+        if (_pendingServices == null)
+        {
+            return null;
+        }
+
+        _ownedProvider = _pendingServices.BuildServiceProvider();
+        _ownedScope = _ownedProvider.CreateScope();
+
+        return _ownedScope.ServiceProvider;
+    }
+
+    private object? ResolveExternalService(Type type, string key)
+    {
+        foreach (var provider in GetExternalProviders())
+        {
+            object? service;
+
+            if (string.IsNullOrEmpty(key))
+            {
+                service = provider.GetService(type);
+            }
+            else
+            {
+                var keyedProvider = provider as IKeyedServiceProvider;
+
+                service = keyedProvider?.GetKeyedService(type, key);
+            }
+
+            if (service != null)
+            {
+                return service;
+            }
+        }
+
+        return null;
+    }
+
+    private IEnumerable<IServiceProvider> GetExternalProviders()
+    {
+        if (_importedScope != null)
+        {
+            yield return _importedScope.ServiceProvider;
+        }
+        else if (_importedProvider != null)
+        {
+            yield return _importedProvider;
+        }
+
+        var owned = EnsureOwnedProvider();
+
+        if (owned != null)
+        {
+            yield return owned;
+        }
+    }
+
+    private void DisposeImported()
+    {
+        _importedScope?.Dispose();
+        _importedScope = null;
+
+        // The imported provider is borrowed from the caller and must not be disposed here.
+        _importedProvider = null;
+    }
+
+    private void DisposeOwned()
+    {
+        _ownedScope?.Dispose();
+        _ownedScope = null;
+
+        (_ownedProvider as IDisposable)?.Dispose();
+        _ownedProvider = null;
+    }
+
+    private sealed class ServiceProviderBridge
+        : IServiceProvider, IKeyedServiceProvider, ISupportRequiredService, IServiceScopeFactory, IServiceScope
+    {
+        private readonly TestsBase _owner;
+
+        public ServiceProviderBridge(TestsBase owner)
+        {
+            _owner = owner;
+        }
+
+        public IServiceProvider ServiceProvider => this;
+
+        public IServiceScope CreateScope()
+        {
+            return this;
+        }
+
+        public void Dispose()
+        {
+            // The bridge shares the lifetime of the test class; scopes created from it are no-ops.
+        }
+
+        public object? GetService(Type serviceType)
+        {
+            return _owner.ResolveService(serviceType, string.Empty);
+        }
+
+        public object GetRequiredService(Type serviceType)
+        {
+            var service = _owner.ResolveService(serviceType, string.Empty);
+
+            return service ?? throw new InvalidOperationException(
+                $"No service for type {serviceType.FullName} has been registered.");
+        }
+
+        public object? GetKeyedService(Type serviceType, object? serviceKey)
+        {
+            var key = serviceKey?.ToString() ?? string.Empty;
+
+            return _owner.ResolveService(serviceType, key);
+        }
+
+        public object GetRequiredKeyedService(Type serviceType, object? serviceKey)
+        {
+            var service = GetKeyedService(serviceType, serviceKey);
+
+            return service ?? throw new InvalidOperationException(
+                $"No service for type {serviceType.FullName} has been registered.");
+        }
+    }
 }
