@@ -47,7 +47,7 @@ jobs:
     # the value always matches the packaged version.
 
     - name: Setup dotnet
-      uses: actions/setup-dotnet@v5
+      uses: actions/setup-dotnet@v6
       with:
         # 10.x provides the SDK pinned in global.json; 8.x and 9.x provide the runtimes the
         # multi-targeted libraries build against (net8.0;net9.0;net10.0).
@@ -137,7 +137,7 @@ jobs:
         name: packages
 
     - name: Setup dotnet
-      uses: actions/setup-dotnet@v5
+      uses: actions/setup-dotnet@v6
       with:
         dotnet-version: 10.x
 
@@ -179,7 +179,7 @@ jobs:
         echo SemVer=$(echo $value) >> $GITHUB_ENV
 
     - name: Setup dotnet
-      uses: actions/setup-dotnet@v5
+      uses: actions/setup-dotnet@v6
       with:
         dotnet-version: 10.x
 
